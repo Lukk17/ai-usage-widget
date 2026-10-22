@@ -170,6 +170,8 @@ Item {
 
     CommandRunner {
         id: commandRunner
+
+        objectName: "commandRunner"
     }
 
     WalletClient {

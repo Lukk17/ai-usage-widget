@@ -133,6 +133,11 @@ TestCase {
         return controller.monitor.snapshot().every(entry => !entry.isLoading && entry.lastAttemptAt !== null)
     }
 
+    function waitUntilIdle(controllers) {
+        controllers.forEach(controller => { controller.reloadIntervalMs = 3600000 })
+        tryVerify(() => controllers.every(controller => settled(controller) && findChild(controller, "commandRunner").runningCount === 0), loadTimeoutMs, "every check and settings command finished")
+    }
+
     function loadedController() {
         const controller = controllerWith(scenarioAccounts)
         tryVerify(() => settled(controller), loadTimeoutMs, "every account finished its first check")
@@ -569,6 +574,7 @@ TestCase {
         writeSettingsFile(controller.settingsFileName, { accounts: JSON.stringify([{ id: "alater", service: "jetbrains", name: "later" }]), refreshSeconds: 900 })
         tryVerify(() => controller.viewModel.keys.indexOf("alater") !== -1, 10000, "the account appears after the file changed")
         compare(controller.refreshSeconds, 900)
+        waitUntilIdle([controller])
     }
 
     function test_theFirstStartCopiesTheAppletAccountsIntoTheOwnFileOnce() {
@@ -580,6 +586,7 @@ TestCase {
         const afterLayoutReset = controllerWith([], { settingsFileName: first.settingsFileName })
         compare(afterLayoutReset.accounts.map(account => account.id).join(","), "aone,atwo,athree")
         compare(afterLayoutReset.legacyConfiguration.accounts, "[]")
+        waitUntilIdle([first, afterLayoutReset])
     }
 
     function test_whenTheFileAndTheAppletBothHaveAccountsTheFileWins() {
@@ -590,16 +597,19 @@ TestCase {
         compare(controller.refreshSeconds, 300)
         compare(savedOrder(controller), "afile")
         compare(controller.legacyConfiguration.accounts, JSON.stringify(threeAccounts()))
+        waitUntilIdle([controller])
     }
 
     function test_deletedAccountsDoNotComeBackFromTheAppletCopy() {
         const first = controllerWith([{ id: "aone", service: "jetbrains", name: "one" }])
+        waitUntilIdle([first])
         let result = null
         first.deleteAccount("aone").then(value => { result = value })
         tryVerify(() => result !== null && result.ok, 20000, "the delete finished")
         compare(readSettingsFile(first.settingsFileName).accounts, "[]")
         const again = controllerWith([{ id: "aone", service: "jetbrains", name: "one" }], { settingsFileName: first.settingsFileName })
         compare(again.accounts.length, 0)
+        waitUntilIdle([first, again])
     }
 
     function test_twoWidgetsShareOneFile() {
@@ -613,6 +623,7 @@ TestCase {
         desktop.addAccount({ service: "chatgpt", name: "second" }).then(value => { result = value })
         tryVerify(() => result !== null && result.ok, 20000, "the second add finished")
         compare(savedAccounts(panel).map(account => account.name).join(","), "shared,second")
+        waitUntilIdle([panel, desktop])
     }
 
     function test_aSettingsFileThatRefusesTheWriteShowsTheFailureAndAddsNothing() {
@@ -627,6 +638,7 @@ TestCase {
         compare(findChild(view.settings, "settingsStatus").text, "The account could not be saved")
         compare(controller.accounts.length, 0)
         compare(readSettingsFile(fileName).accounts, "[]")
+        waitUntilIdle([controller])
     }
 
     function test_thePanelShowsOnlyTheIconWithAPlainName() {
@@ -878,7 +890,7 @@ TestCase {
         tryVerify(() => cardOrder(controller) === "athree,aone,atwo" && !settings.busy, 20000, "the second move was saved")
         compare(savedOrder(controller), "athree,aone,atwo")
         compare(controller.viewModel.keys.join(","), "athree,aone,atwo")
-        tryVerify(() => settled(controller), loadTimeoutMs, "the reads after the move finished")
+        waitUntilIdle([controller])
     }
 
     function dragHandle(settings, id, rows) {
@@ -902,11 +914,12 @@ TestCase {
         waitForRendering(settings)
         dragHandle(settings, "aone", 2)
         tryVerify(() => savedOrder(controller) === "atwo,athree,aone", 5000, "the drop saved the new order, got " + savedOrder(controller))
-        compare(cardOrder(controller), "atwo,athree,aone")
+        tryVerify(() => cardOrder(controller) === "atwo,athree,aone" && !settings.busy, 20000, "the cards follow the saved order, got " + cardOrder(controller))
         wait(Kirigami.Units.longDuration * 2)
         waitForRendering(settings)
         dragHandle(settings, "athree", -1)
         tryVerify(() => savedOrder(controller) === "athree,atwo,aone", 5000, "the upward drop saved the new order, got " + savedOrder(controller))
-        tryVerify(() => settled(controller), loadTimeoutMs, "the reads after the drop finished")
+        tryVerify(() => cardOrder(controller) === "athree,atwo,aone" && !settings.busy, 20000, "the cards follow the upward drop, got " + cardOrder(controller))
+        waitUntilIdle([controller])
     }
 }
