@@ -2,7 +2,7 @@
 
 A KDE Plasma panel and desktop widget that shows AI limits, spend and balance for several services and accounts in one place.
 
-[![license](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE) [![plasma](https://img.shields.io/badge/KDE%20Plasma-6.4%2B-1d99f3)](https://kde.org/plasma-desktop/) [![curl](https://img.shields.io/badge/curl-8.4%2B-073551)](https://curl.se/) [![qt](https://img.shields.io/badge/Qt-6-41cd52)](https://www.qt.io/) [![services](https://img.shields.io/badge/services-11-orange)](#services-and-endpoints) [![unit tests](https://img.shields.io/badge/unit%20tests-411-brightgreen)](tests/unit) [![qml tests](https://img.shields.io/badge/QML%20tests-48-brightgreen)](tests/qml)
+[![license](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE) [![plasma](https://img.shields.io/badge/KDE%20Plasma-6.4%2B-1d99f3)](https://kde.org/plasma-desktop/) [![curl](https://img.shields.io/badge/curl-8.4%2B-073551)](https://curl.se/) [![qt](https://img.shields.io/badge/Qt-6-41cd52)](https://www.qt.io/) [![services](https://img.shields.io/badge/services-11-orange)](#services-and-endpoints) [![unit tests](https://img.shields.io/badge/unit%20tests-436-brightgreen)](tests/unit) [![qml tests](https://img.shields.io/badge/QML%20tests-53-brightgreen)](tests/qml)
 
 ---
 
@@ -16,7 +16,7 @@ It exists because each AI service shows its usage on a different web page, and s
 
 ### Quick start
 
-The widget needs KDE Plasma and `curl` at least at the versions in the badges above, KWallet (the `kwallet` package, with `kwalletd6` running), `secret-tool` (the `libsecret` package), `gdbus` (the `glib2` package), `timeout` and GNU `find`. These exist only on Linux, so these steps have only a Unix-shell version.
+The widget needs KDE Plasma and `curl` at least at the versions in the badges above, KWallet (the `kwallet` package, with `kwalletd6` running), `secret-tool` (the `libsecret` package), `gdbus` (the `glib2` package), `kreadconfig6` and `kwriteconfig6` (the `kconfig` package, part of every Plasma install), `base64`, `timeout` and GNU `find`. These exist only on Linux, so these steps have only a Unix-shell version.
 
 1. Install the widget for your user:
 
@@ -54,6 +54,8 @@ kpackagetool6 -t Plasma/Applet -r com.github.lukk17.aiusage
 
 All settings live inside the popup. The widget adds no page to the Plasma configure dialog. The settings page has a Back button at the top left, and the gear button in the top bar still opens and closes it. Messages about settings actions show only on the settings page and clear when you leave it.
 
+The account list and the refresh choice are saved in the widget's own file `~/.config/ai-usage-widgetrc` (in `$XDG_CONFIG_HOME` when that is set), not in the Plasma panel settings. They stay when a Global Theme layout, a panel reset or removing and adding the widget wipes the panel settings, and every copy of the widget (for example one in the panel and one on the desktop) shows the same accounts. Each copy reads the file every 30 seconds and before every change. The first start of this version copies the accounts from the old panel settings into the file once, and only when the file has no account list yet. The old copy is left as it is. Keys are never in this file, see [docs/adr/0007-accounts-in-the-own-settings-file.md](docs/adr/0007-accounts-in-the-own-settings-file.md).
+
 1. Refresh every (shown on the account list, not in the Add or Edit form): 30 seconds (the default), 1, 5, 15, 30 or 60 minutes. Subscription limits follow this choice. Spend services (OpenAI API, Anthropic API, xAI API, OpenCode Zen, Requesty and Hugging Face) are asked at most every 5 minutes, also by the refresh button. The refresh button checks again at once, but never asks one account more than once per 30 seconds, except an account whose check never reached the service (no key, locked wallet), which is checked at once.
 2. Add account: pick the service and type a name or email (1 to 100 characters, any text). A service with a key asks for the key, xAI also asks for the team ID. Claude asks for no key: the form lists the organizations found in the Claude desktop app file with their current percentages, and you type a name or email for each one you want. ChatGPT and JetBrains AI ask only for a name.
 3. Edit changes the name or email, the team ID, or the key. An empty key field keeps the saved key. A new key is checked at once, a new name shows from the next check. The form keeps what you typed until Save succeeds or you press its Cancel, also when you close the settings or the popup.
@@ -61,7 +63,7 @@ All settings live inside the popup. The widget adds no page to the Plasma config
 5. Delete asks once more, then removes the key from KWallet and the account from the list. When KWallet refuses, the account stays and the settings say why.
 6. When KWallet is locked or does not answer, an Unlock KWallet button shows. Before each check the widget asks the Secret Service `SearchItems` with `gdbus`, which loads no secret and opens no prompt, whether the entry is locked. The button opens the wallet with `openAsync`, so KWallet asks for its password. While the widget waits, the popup says so and offers a Cancel that stops the wait at once. The widget closes the wallet again as soon as it opens, even after a long wait, and then checks again.
 
-Each account gets a generated id such as `a3f09c1d2b4e7`. The key is saved in KWallet in the folder `ai-usage` as the entry `<service>.<id>`, for example `minimax.a3f09c1d2b4e7`, and the checks read it with `secret-tool lookup server 'ai-usage' user '<service>.<id>' type 'plaintext'`. The name or email you type is only shown, it never reaches a command, a URL or a wallet entry name. During Save the key passes once through plasmashell memory and over the session bus to `kwalletd6`, see [docs/adr/0005-keys-saved-through-the-kwallet-dbus-api.md](docs/adr/0005-keys-saved-through-the-kwallet-dbus-api.md).
+Each account gets a generated id such as `a3f09c1d2b4e7`. The key is saved in KWallet in the folder `ai-usage` as the entry `<service>.<id>`, for example `minimax.a3f09c1d2b4e7`, and the checks read it with `secret-tool lookup server 'ai-usage' user '<service>.<id>' type 'plaintext'`. The name or email you type never reaches a URL or a wallet entry name, and it reaches a command only inside the base64 encoded account list that `kwriteconfig6` saves, so no name can change the command. During Save the key passes once through plasmashell memory and over the session bus to `kwalletd6`, see [docs/adr/0005-keys-saved-through-the-kwallet-dbus-api.md](docs/adr/0005-keys-saved-through-the-kwallet-dbus-api.md).
 
 ---
 
@@ -87,7 +89,7 @@ QML only binds and displays. Everything that parses, decides or formats lives in
 ```mermaid
 graph TB
   accTitle: AI Usage widget architecture
-  accDescr: The QML views bind to plain JavaScript modules. The settings view saves keys in KWallet over D-Bus and stores accounts in the widget settings. The monitor runs one shell command per check through the executable engine. A remote check reads the key with secret-tool and pipes it into curl. A local check reads one file of the Claude desktop app, Codex or a JetBrains IDE.
+  accDescr: The QML views bind to plain JavaScript modules. The settings view saves keys in KWallet over D-Bus. The controller keeps the accounts in the widget's own settings file through kreadconfig6 and kwriteconfig6. The monitor runs one shell command per check through the executable engine. A remote check reads the key with secret-tool and pipes it into curl. A local check reads one file of the Claude desktop app, Codex or a JetBrains IDE.
   subgraph Plasma["plasmashell"]
     Views["main.qml, CompactView, FullView, AccountCard"]
     Settings["SettingsView and AccountForm"]
@@ -97,7 +99,7 @@ graph TB
   end
   subgraph Core["contents/code (plain JavaScript)"]
     Monitor["core/monitor.mjs and scheduler.mjs"]
-    Actions["core/accountActions.mjs and accounts.mjs"]
+    Actions["core/accountActions.mjs, accounts.mjs and settingsFile.mjs"]
     Check["core/check.mjs, fetchUsage.mjs and localRead.mjs"]
     Providers["providers/*.mjs"]
     Formatter["core/formatter.mjs"]
@@ -108,7 +110,7 @@ graph TB
     Read["head, tail, grep, find (read only)"]
   end
   Wallet[("KWallet, folder ai-usage")]
-  Config[("widget settings: accounts and refresh choice")]
+  Config[("~/.config/ai-usage-widgetrc: accounts and refresh choice")]
   Services["OpenAI, Anthropic, xAI, OpenCode, MiniMax, Requesty, Hugging Face"]
   Files[("Claude desktop app file, Codex sessions, JetBrains IDE logs")]
   Views --> Controller
@@ -117,7 +119,6 @@ graph TB
   Controller --> Actions
   Controller --> Formatter
   Actions --> WalletClient
-  Actions --> Config
   Monitor --> Check
   Check --> Providers
   Check --> Runner
@@ -126,6 +127,7 @@ graph TB
   Lookup -->|key on stdin| Fetch
   Fetch -->|HTTPS, no redirects| Services
   Runner --> Read
+  Runner -->|kreadconfig6 and kwriteconfig6| Config
   Read --> Files
   WalletClient -->|org.kde.KWallet on the session bus| Wallet
 ```
@@ -179,6 +181,7 @@ The reasons behind the main design choices are in the decision records under [do
 - A backoff that doubles from the refresh choice up to one hour and never comes before `Retry-After`. A lost connection retries without doubling, and a clock that moved back triggers a check at once
 - Limits per answer: at most 1 MiB, 50 MiniMax models, 50 OpenCode Zen members and 64 characters for every text a service sends
 - Several accounts per service, for example one OpenCode Go key per person
+- Accounts kept in the widget's own settings file, so they survive a Global Theme layout or a panel reset and every copy of the widget shares them
 - Accessible names for the panel button, the bars, the cards and the settings fields
 
 ---
@@ -233,12 +236,14 @@ Where this widget is weaker:
 
 ### Configuration
 
-The schema is [package/contents/config/main.xml](package/contents/config/main.xml). No secret is ever stored there, and a unit test checks that it turns nothing on.
+The settings live in `~/.config/ai-usage-widgetrc`, group `[General]`. The widget writes the file only after the first account is added (or copied from the old panel settings). No secret is ever stored there.
 
 | Key | Type | Default | Meaning |
 |---|---|---|---|
-| `accounts` | String | empty | The accounts as a JSON list of `{ "id", "service", "name" }`, plus `teamId` for xAI and `org` for Claude. Written by the settings view. |
+| `accounts` | String | not set | The accounts as a JSON list of `{ "id", "service", "name" }`, plus `teamId` for xAI and `org` for Claude. Written by the settings view. `[]` means every account was deleted. |
 | `refreshSeconds` | Int | 30 | Seconds between checks: 30, 60, 300, 900, 1800 or 3600 |
+
+The same two keys in the panel settings, with the schema [package/contents/config/main.xml](package/contents/config/main.xml), are only read to copy older settings into the file once. A unit test checks that this schema turns nothing on.
 
 `service` is one of `claude`, `chatgpt`, `openai`, `anthropic`, `xai`, `opencodeGo`, `opencodeZen`, `minimax`, `requesty`, `huggingFace` and `jetbrains`. The widget opens no port.
 
@@ -258,8 +263,8 @@ bash tests/run-in-containers.sh
 
 The results land in `test-results/` (or the folder given as the first argument): `node/unit.log` and `node/shellcheck.log`, then `qml/qmllint.log` and `qml/qml.log`. The script deletes only the `node` and `qml` folders inside it, and refuses a results folder that already exists outside the project and outside the temporary folder.
 
-1. Node suite: unit tests for every provider, the curl command builder and parser, the local readers (which run the real read commands on fixture files in a throwaway home folder), the accounts and account actions, the scheduler, the state, the formatter and the monitor, with the coverage gate (90 percent lines and functions, 75 percent branches), then ShellCheck on every shell script.
-2. QML suite: qmllint on every view, then the widget code with the real `secret-tool`, `curl` and `kwalletd6`. It stores fake keys in a throwaway gnome-keyring Secret Service, adds, edits and deletes accounts through the popup settings (with `[KSecretD] Enabled=false` in a throwaway `kwalletrc`, so `kwalletd6` writes into that keyring), checks that a saved key is in no process argument list and no file, runs a separate suite with a locked keyring for the `gdbus` locked check and the Unlock KWallet button, starts an HTTPS fixture server with a throwaway certificate on loopback addresses mapped to the service host names with `--add-host`, and ends by loading the installed widget in `plasmawindowed` and checking that with the default settings it reads no file.
+1. Node suite: unit tests for every provider, the curl command builder and parser, the local readers (which run the real read commands on fixture files in a throwaway home folder), the accounts and account actions, the settings file commands, the move from the panel settings and the queue of settings changes, the scheduler, the state, the formatter and the monitor, with the coverage gate (90 percent lines and functions, 75 percent branches), then ShellCheck on every shell script.
+2. QML suite: qmllint on every view, then the widget code with the real `secret-tool`, `curl` and `kwalletd6`. It stores fake keys in a throwaway gnome-keyring Secret Service, adds, edits and deletes accounts through the popup settings (with `[KSecretD] Enabled=false` in a throwaway `kwalletrc`, so `kwalletd6` writes into that keyring), checks that a saved key is in no process argument list and no file, saves the accounts in a throwaway `ai-usage-widgetrc` with the real `kreadconfig6` and `kwriteconfig6` (the copy from the panel settings, two widgets sharing one file, a file locked with `[$i]`), runs a separate suite with a locked keyring for the `gdbus` locked check and the Unlock KWallet button, starts an HTTPS fixture server with a throwaway certificate on loopback addresses mapped to the service host names with `--add-host`, and ends by loading the installed widget in `plasmawindowed` and checking that with the default settings it reads no service file and writes no settings file.
 
 The host names and addresses come from [tests/fixtures/scenarios.json](tests/fixtures/scenarios.json). The fixtures under [tests/fixtures](tests/fixtures) were not recorded from live calls. They were written from the official documentation and the open source code named in the services table, with every name, email, id and key replaced by an obvious placeholder.
 
@@ -278,8 +283,9 @@ The host names and addresses come from [tests/fixtures/scenarios.json](tests/fix
 | [docs/adr/0004-claude-through-the-status-line-only.md](docs/adr/0004-claude-through-the-status-line-only.md) | The earlier Claude status line design, superseded |
 | [docs/adr/0005-keys-saved-through-the-kwallet-dbus-api.md](docs/adr/0005-keys-saved-through-the-kwallet-dbus-api.md) | Why keys are saved through the KWallet D-Bus API |
 | [docs/adr/0006-settings-inside-the-widget-and-accounts-by-id.md](docs/adr/0006-settings-inside-the-widget-and-accounts-by-id.md) | Why settings live in the popup, accounts have generated ids and nothing is on by default |
+| [docs/adr/0007-accounts-in-the-own-settings-file.md](docs/adr/0007-accounts-in-the-own-settings-file.md) | Why the accounts live in the widget's own settings file, shared by every copy, and how the old settings are copied |
 | [LICENSE](LICENSE) | GNU General Public License version 3 |
-| [package/contents/config/main.xml](package/contents/config/main.xml) | Every setting the widget stores |
+| [package/contents/config/main.xml](package/contents/config/main.xml) | The old panel settings, read only to copy them into the settings file once |
 | [tests/run-in-containers.sh](tests/run-in-containers.sh) | The one command that runs every test in isolated containers |
 | [docs/kde-store-listing.md](docs/kde-store-listing.md) | Name options, description, changelog, tags and form fields for the KDE Store page |
 | [docs/store-assets](docs/store-assets) | The KDE Store logo and gallery pictures, made with fake accounts only |

@@ -121,11 +121,11 @@ PlasmaComponents.ScrollView {
         for (let index = 0; index < accountModel.count; index += 1) {
             ids.push(accountModel.get(index).accountId)
         }
-        controller.setAccountOrder(ids)
+        track(() => controller.setAccountOrder(ids))
     }
 
     function moveAccount(id, step) {
-        controller.moveAccount(id, step)
+        track(() => controller.moveAccount(id, step))
     }
 
     Connections {
@@ -193,7 +193,7 @@ PlasmaComponents.ScrollView {
                     objectName: "refreshBox"
                     model: Accounts.REFRESH_CHOICES_SECONDS.map(seconds => Formatter.refreshChoiceText(seconds))
                     currentIndex: view.controller ? Accounts.REFRESH_CHOICES_SECONDS.indexOf(view.controller.refreshSeconds) : 0
-                    onActivated: index => view.controller.setRefreshSeconds(Accounts.REFRESH_CHOICES_SECONDS[index])
+                    onActivated: index => view.track(() => view.controller.setRefreshSeconds(Accounts.REFRESH_CHOICES_SECONDS[index]))
                     Accessible.name: "Refresh every"
                 }
             }

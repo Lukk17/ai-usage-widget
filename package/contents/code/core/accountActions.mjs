@@ -30,10 +30,19 @@ export function createAccountActions(deps) {
   }
 
   function store(account, checkNow) {
-    deps.setAccounts(withAccount(deps.getAccounts(), account));
-    if (checkNow) {
-      deps.recheck(account.id);
-    }
+    return deps.updateAccounts((list) => withAccount(list, account)).then(() => {
+      if (checkNow) {
+        deps.recheck(account.id);
+      }
+    });
+  }
+
+  function storeNewKeyAccount(provider, account) {
+    return store(account, true).then(() => done('add', provider, account), (error) => deps.wallet.remove(provider.id, account.id).then(() => {
+      throw error;
+    }, () => {
+      throw error;
+    }));
   }
 
   function add(spec) {
@@ -47,20 +56,13 @@ export function createAccountActions(deps) {
       return refused(invalidReason(provider, spec.name, spec.fields));
     }
     if (!provider.needsKey) {
-      store(account, true);
-      return Promise.resolve(done('add', provider, account));
+      return store(account, true).then(() => done('add', provider, account));
     }
     const key = cleanKey(spec.key);
     if (key === '') {
       return refused(INVALID.KEY);
     }
-    return deps.wallet.save(provider.id, id, key).then((result) => {
-      if (!result.ok) {
-        return walletFailed(result.code);
-      }
-      store(account, true);
-      return done('add', provider, account);
-    });
+    return deps.wallet.save(provider.id, id, key).then((result) => (result.ok ? storeNewKeyAccount(provider, account) : walletFailed(result.code)));
   }
 
   function edit(id, spec) {
@@ -76,16 +78,11 @@ export function createAccountActions(deps) {
     }
     const key = cleanKey(spec.key);
     if (!provider.needsKey || key === '') {
-      store(account, false);
-      return Promise.resolve(done('edit', provider, account));
+      return store(account, false).then(() => done('edit', provider, account));
     }
-    return deps.wallet.save(provider.id, id, key).then((result) => {
-      if (!result.ok) {
-        return walletFailed(result.code);
-      }
-      store(account, true);
-      return done('edit', provider, account);
-    });
+    return deps.wallet.save(provider.id, id, key).then((result) => (result.ok
+      ? store(account, true).then(() => done('edit', provider, account))
+      : walletFailed(result.code)));
   }
 
   function remove(id) {
@@ -94,12 +91,9 @@ export function createAccountActions(deps) {
     if (!provider) {
       return refused(INVALID.ACCOUNT);
     }
-    const forget = () => {
-      deps.setAccounts(withoutAccount(deps.getAccounts(), id));
-      return done('remove', provider, current);
-    };
+    const forget = () => deps.updateAccounts((list) => withoutAccount(list, id)).then(() => done('remove', provider, current));
     if (!provider.needsKey) {
-      return Promise.resolve(forget());
+      return forget();
     }
     return deps.wallet.remove(provider.id, id).then((result) => (result.ok ? forget() : walletFailed(result.code)));
   }

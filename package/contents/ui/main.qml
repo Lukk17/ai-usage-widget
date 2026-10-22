@@ -17,7 +17,7 @@ PlasmoidItem {
 
     UsageController {
         id: usage
-        configuration: Plasmoid.configuration
+        legacyConfiguration: Plasmoid.configuration
     }
 
     compactRepresentation: CompactView {

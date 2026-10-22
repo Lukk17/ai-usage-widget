@@ -1,7 +1,7 @@
 # ADR-0006: Settings inside the widget, accounts by id, nothing on by default
 
 Date: 2026-10-19
-Status: accepted, supersedes ADR-0004 and the settings page of ADR-0005
+Status: accepted, supersedes ADR-0004 and the settings page of ADR-0005. Where the accounts are stored is replaced by ADR-0007.
 Deciders: Łukasz Sarna (owner)
 
 ### Context

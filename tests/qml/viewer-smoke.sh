@@ -49,6 +49,13 @@ else
   printf 'ok - the widget loaded without QML warnings or errors\n'
 fi
 
+if [[ ! -e "$XDG_CONFIG_HOME/ai-usage-widgetrc" ]]; then
+  printf 'ok - with the default settings the widget wrote no settings file\n'
+else
+  printf 'not ok - with the default settings the widget wrote %s\n' "$XDG_CONFIG_HOME/ai-usage-widgetrc"
+  failures=$((failures + 1))
+fi
+
 if [[ "$(stat -c '%X' "$claude_file")" -eq "$read_before" ]]; then
   printf 'ok - with the default settings the widget read no file, no service is on\n'
 else

@@ -8,6 +8,7 @@ import "../../package/contents/code/core/listSync.mjs" as ListSync
 import "../../package/contents/code/core/curlCommand.mjs" as CurlCommand
 import "../../package/contents/code/core/accounts.mjs" as Accounts
 import "../../package/contents/code/providers/registry.mjs" as Registry
+import "../../package/contents/code/core/settingsFile.mjs" as SettingsFile
 
 TestCase {
     id: suite
@@ -22,6 +23,7 @@ TestCase {
     readonly property string claudeOrgA: "00000000-0000-4000-8000-0000000000aa"
     readonly property string claudeOrgB: "00000000-0000-4000-8000-0000000000bb"
     property var scenarioAccounts: []
+    property int settingsFileCount: 0
 
     Component {
         id: configurationComponent
@@ -101,9 +103,30 @@ TestCase {
         return result
     }
 
+    function newSettingsFile() {
+        settingsFileCount += 1
+        return "ai-usage-test-" + settingsFileCount + "rc"
+    }
+
+    function readSettingsFile(fileName) {
+        const read = SettingsFile.parseSettingsOutput(runCommand(SettingsFile.readCommand(fileName), 20000))
+        verify(read.ok, "the settings file was read")
+        return read.values
+    }
+
+    function writeSettingsFile(fileName, values) {
+        verify(SettingsFile.parseSettingsOutput(runCommand(SettingsFile.writeCommand(fileName, values), 20000)).ok, "the settings file was written")
+    }
+
+    function settingsFileText(fileName) {
+        return runCommand("cat -- \"${XDG_CONFIG_HOME:-$HOME/.config}/" + fileName + "\"", 5000).stdout
+    }
+
     function controllerWith(accounts, properties) {
         const configuration = createTemporaryObject(configurationComponent, suite, { accounts: JSON.stringify(accounts) })
-        return createTemporaryObject(controllerComponent, suite, Object.assign({ configuration: configuration }, properties || {}))
+        const controller = createTemporaryObject(controllerComponent, suite, Object.assign({ legacyConfiguration: configuration, settingsFileName: newSettingsFile() }, properties || {}))
+        tryVerify(() => controller.settingsLoaded, 20000, "the settings file was read")
+        return controller
     }
 
     function settled(controller) {
@@ -139,7 +162,7 @@ TestCase {
     }
 
     function savedAccounts(controller) {
-        return Accounts.parseAccounts(controller.configuration.accounts, Registry.findProvider)
+        return Accounts.parseAccounts(readSettingsFile(controller.settingsFileName).accounts || "", Registry.findProvider)
     }
 
     function walletHas(service, id) {
@@ -346,8 +369,8 @@ TestCase {
         compare(box.currentIndex, 0)
         compare(box.model.join(","), "30 seconds,1 minute,5 minutes,15 minutes,30 minutes,60 minutes")
         box.activated(2)
-        compare(controller.configuration.refreshSeconds, 300)
-        compare(controller.refreshSeconds, 300)
+        tryVerify(() => controller.refreshSeconds === 300, 20000, "the refresh choice was saved")
+        compare(readSettingsFile(controller.settingsFileName).refreshSeconds, "300")
         compare(box.currentIndex, 2)
     }
 
@@ -461,7 +484,8 @@ TestCase {
         const pattern = "a='scenario-'; b='sampler-k3y'; printf '%s%s\\n' \"$a\" \"$b\""
         compare(runCommand(pattern + " | grep -r -l -F -f - \"$HOME\" \"$XDG_DATA_HOME\" \"$XDG_CACHE_HOME\" \"$XDG_RUNTIME_DIR\" --exclude-dir=keyrings 2>/dev/null; true", 10000).stdout, "")
         verify(runCommand("ls \"$XDG_DATA_HOME/keyrings\"", 5000).stdout.indexOf("login.keyring") !== -1, "the throwaway keyring exists")
-        verify(controller.configuration.accounts.indexOf("scenario-") === -1, "the key is not in the settings")
+        compare(savedAccounts(controller).length, 1)
+        verify(settingsFileText(controller.settingsFileName).indexOf("scenario-") === -1, "the key is not in the settings file")
     }
 
     function test_aMissingKwalletdSaysKWalletIsNotRunningAndAddsNothing() {
@@ -539,12 +563,70 @@ TestCase {
         verify(results[1].stdout.trim().length > 0)
     }
 
-    function test_controllerFollowsConfigurationChanges() {
-        const controller = controllerWith([])
+    function test_aChangeToTheSharedFileByAnotherWidgetIsPickedUp() {
+        const controller = controllerWith([], { reloadIntervalMs: 300 })
         compare(controller.viewModel.hasAccounts, false)
-        controller.configuration.accounts = JSON.stringify([{ id: "alater", service: "jetbrains", name: "later" }])
-        controller.configuration.valueChanged("accounts", controller.configuration.accounts)
-        tryVerify(() => controller.viewModel.keys.indexOf("alater") !== -1, 10000, "the account appears after the setting changed")
+        writeSettingsFile(controller.settingsFileName, { accounts: JSON.stringify([{ id: "alater", service: "jetbrains", name: "later" }]), refreshSeconds: 900 })
+        tryVerify(() => controller.viewModel.keys.indexOf("alater") !== -1, 10000, "the account appears after the file changed")
+        compare(controller.refreshSeconds, 900)
+    }
+
+    function test_theFirstStartCopiesTheAppletAccountsIntoTheOwnFileOnce() {
+        const first = controllerWith(threeAccounts())
+        compare(first.accounts.map(account => account.id).join(","), "aone,atwo,athree")
+        compare(savedOrder(first), "aone,atwo,athree")
+        compare(readSettingsFile(first.settingsFileName).refreshSeconds, "30")
+        compare(first.legacyConfiguration.accounts, JSON.stringify(threeAccounts()))
+        const afterLayoutReset = controllerWith([], { settingsFileName: first.settingsFileName })
+        compare(afterLayoutReset.accounts.map(account => account.id).join(","), "aone,atwo,athree")
+        compare(afterLayoutReset.legacyConfiguration.accounts, "[]")
+    }
+
+    function test_whenTheFileAndTheAppletBothHaveAccountsTheFileWins() {
+        const fileName = newSettingsFile()
+        writeSettingsFile(fileName, { accounts: JSON.stringify([{ id: "afile", service: "jetbrains", name: "from the file" }]), refreshSeconds: 300 })
+        const controller = controllerWith(threeAccounts(), { settingsFileName: fileName })
+        compare(controller.accounts.map(account => account.id).join(","), "afile")
+        compare(controller.refreshSeconds, 300)
+        compare(savedOrder(controller), "afile")
+        compare(controller.legacyConfiguration.accounts, JSON.stringify(threeAccounts()))
+    }
+
+    function test_deletedAccountsDoNotComeBackFromTheAppletCopy() {
+        const first = controllerWith([{ id: "aone", service: "jetbrains", name: "one" }])
+        let result = null
+        first.deleteAccount("aone").then(value => { result = value })
+        tryVerify(() => result !== null && result.ok, 20000, "the delete finished")
+        compare(readSettingsFile(first.settingsFileName).accounts, "[]")
+        const again = controllerWith([{ id: "aone", service: "jetbrains", name: "one" }], { settingsFileName: first.settingsFileName })
+        compare(again.accounts.length, 0)
+    }
+
+    function test_twoWidgetsShareOneFile() {
+        const panel = controllerWith([])
+        const desktop = controllerWith([], { settingsFileName: panel.settingsFileName, reloadIntervalMs: 300 })
+        let result = null
+        panel.addAccount({ service: "jetbrains", name: "shared" }).then(value => { result = value })
+        tryVerify(() => result !== null && result.ok, 20000, "the add finished")
+        tryVerify(() => desktop.accounts.map(account => account.name).join(",") === "shared", 10000, "the other widget shows the account")
+        result = null
+        desktop.addAccount({ service: "chatgpt", name: "second" }).then(value => { result = value })
+        tryVerify(() => result !== null && result.ok, 20000, "the second add finished")
+        compare(savedAccounts(panel).map(account => account.name).join(","), "shared,second")
+    }
+
+    function test_aSettingsFileThatRefusesTheWriteShowsTheFailureAndAddsNothing() {
+        const fileName = newSettingsFile()
+        runCommand("mkdir -p \"${XDG_CONFIG_HOME:-$HOME/.config}\" && printf '[General][$i]\\naccounts=[]\\n' > \"${XDG_CONFIG_HOME:-$HOME/.config}/" + fileName + "\"", 5000)
+        const controller = controllerWith([], { settingsFileName: fileName })
+        const full = fullView(controller)
+        const view = startAdding(full, "jetbrains")
+        findChild(view.form, "nameField").text = "locked down"
+        findChild(view.form, "saveButton").clicked()
+        tryVerify(() => !view.settings.busy, 20000, "the save finished")
+        compare(findChild(view.settings, "settingsStatus").text, "The account could not be saved")
+        compare(controller.accounts.length, 0)
+        compare(readSettingsFile(fileName).accounts, "[]")
     }
 
     function test_thePanelShowsOnlyTheIconWithAPlainName() {
@@ -790,11 +872,11 @@ TestCase {
         compare(findChild(settings, "moveUp-aone").enabled, false)
         compare(findChild(settings, "moveDown-athree").enabled, false)
         findChild(settings, "moveUp-athree").clicked()
+        tryVerify(() => cardOrder(controller) === "aone,athree,atwo" && !settings.busy, 20000, "the move was saved")
         compare(savedOrder(controller), "aone,athree,atwo")
-        compare(cardOrder(controller), "aone,athree,atwo")
         findChild(settings, "moveDown-aone").clicked()
+        tryVerify(() => cardOrder(controller) === "athree,aone,atwo" && !settings.busy, 20000, "the second move was saved")
         compare(savedOrder(controller), "athree,aone,atwo")
-        compare(cardOrder(controller), "athree,aone,atwo")
         compare(controller.viewModel.keys.join(","), "athree,aone,atwo")
         tryVerify(() => settled(controller), loadTimeoutMs, "the reads after the move finished")
     }

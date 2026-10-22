@@ -9,20 +9,25 @@ import "../code/core/accountActions.mjs" as AccountActions
 import "../code/core/check.mjs" as Check
 import "../code/core/curlCommand.mjs" as CurlCommand
 import "../code/core/listSync.mjs" as ListSync
+import "../code/core/settingsFile.mjs" as SettingsFile
 import "../code/core/units.mjs" as Units
 import "../code/providers/registry.mjs" as Registry
 
 Item {
     id: controller
 
-    property var configuration: null
+    property var legacyConfiguration: null
+    property string settingsFileName: SettingsFile.SETTINGS_FILE
+    property int reloadIntervalMs: 30000
+    property var settingsValues: SettingsFile.EMPTY_VALUES
+    property bool settingsLoaded: false
     property int tickIntervalMs: 5000
     property var clock: () => Date.now()
     property alias walletService: wallet.service
     property alias walletOpenWaitMs: wallet.openWaitMs
     readonly property bool walletWaiting: wallet.waitingCount > 0
     readonly property var providers: Registry.ALL_PROVIDERS
-    readonly property int refreshSeconds: Accounts.refreshSeconds(configuration ? configuration.refreshSeconds : undefined)
+    readonly property int refreshSeconds: Accounts.refreshSeconds(settingsValues.refreshSeconds)
     property var accounts: []
     property var viewModel: Formatter.buildViewModel([], clock())
     readonly property ListModel sectionModel: ListModel {}
@@ -34,6 +39,7 @@ Item {
 
     property var monitor: null
     property var actions: null
+    property var settingsStore: null
 
     function syncSections(keys) {
         const current = []
@@ -57,8 +63,47 @@ Item {
         syncSections(next.keys)
     }
 
+    function parseAccountsText(text) {
+        return Accounts.parseAccounts(text || "", Registry.findProvider)
+    }
+
     function readAccounts() {
-        return Accounts.parseAccounts(configuration ? configuration.accounts : "", Registry.findProvider)
+        return parseAccountsText(settingsValues.accounts)
+    }
+
+    function legacySettings() {
+        return {
+            accounts: parseAccountsText(legacyConfiguration ? legacyConfiguration.accounts : ""),
+            refreshSeconds: Accounts.refreshSeconds(legacyConfiguration ? legacyConfiguration.refreshSeconds : undefined)
+        }
+    }
+
+    function applySettings(values) {
+        const changed = values.accounts !== settingsValues.accounts || values.refreshSeconds !== settingsValues.refreshSeconds
+        settingsValues = values
+        if (changed || !settingsLoaded) {
+            settingsLoaded = true
+            reconfigure()
+        }
+        return values
+    }
+
+    function reloadSettings() {
+        return settingsStore.load().then(result => {
+            applySettings(result.values)
+            return result
+        })
+    }
+
+    function updateSettings(change) {
+        return settingsStore.update(change).then(values => applySettings(values), error => {
+            accounts = readAccounts()
+            throw error
+        })
+    }
+
+    function updateAccounts(change) {
+        return updateSettings(values => ({ accounts: Accounts.serializeAccounts(change(parseAccountsText(values.accounts))) }))
     }
 
     function reconfigure() {
@@ -70,22 +115,16 @@ Item {
         monitor.tick()
     }
 
-    function writeAccounts(list) {
-        configuration.accounts = Accounts.serializeAccounts(list)
-        reconfigure()
-    }
-
     function setAccountOrder(ids) {
-        writeAccounts(Accounts.withOrder(readAccounts(), ids))
+        return updateAccounts(list => Accounts.withOrder(list, ids))
     }
 
     function moveAccount(id, step) {
-        writeAccounts(Accounts.withAccountMoved(readAccounts(), id, step))
+        return updateAccounts(list => Accounts.withAccountMoved(list, id, step))
     }
 
     function setRefreshSeconds(seconds) {
-        configuration.refreshSeconds = Accounts.refreshSeconds(seconds)
-        reconfigure()
+        return updateSettings(() => ({ refreshSeconds: Accounts.refreshSeconds(seconds) }))
     }
 
     function refreshNow() {
@@ -137,13 +176,11 @@ Item {
         id: wallet
     }
 
-    Connections {
-        target: controller.configuration
-        ignoreUnknownSignals: true
-
-        function onValueChanged() {
-            controller.reconfigure()
-        }
+    Timer {
+        interval: controller.reloadIntervalMs
+        repeat: true
+        running: controller.settingsLoaded
+        onTriggered: controller.reloadSettings()
     }
 
     Timer {
@@ -166,11 +203,17 @@ Item {
         actions = AccountActions.createAccountActions({
             wallet: wallet,
             getAccounts: () => controller.readAccounts(),
-            setAccounts: list => controller.writeAccounts(list),
+            updateAccounts: change => controller.updateAccounts(change),
             findProvider: Registry.findProvider,
             newId: existing => Accounts.newAccountId(existing),
             recheck: id => controller.monitor.recheck(id)
         })
+        settingsStore = SettingsFile.createSettingsStore({
+            fileName: settingsFileName,
+            runCommand: (command, timeoutMs) => commandRunner.run(command, timeoutMs),
+            legacy: () => controller.legacySettings()
+        })
         reconfigure()
+        reloadSettings()
     }
 }

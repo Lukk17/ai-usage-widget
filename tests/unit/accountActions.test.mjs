@@ -7,9 +7,10 @@ import { findProvider } from '../../package/contents/code/providers/registry.mjs
 
 const KEY = 'sk-fake-key-for-tests';
 
-function harness(initial, walletAnswers, ids) {
+function harness(initial, walletAnswers, ids, settings) {
   const queue = (ids || []).slice();
-  const state = { accounts: initial || [], saved: [], removed: [], rechecks: [] };
+  const options = Object.assign({ fail: false, file: null }, settings || {});
+  const state = { accounts: initial || [], saved: [], removed: [], rechecks: [], updates: 0 };
   const answers = Object.assign({ save: { ok: true, value: { replaced: false } }, remove: { ok: true, value: { removed: true } } }, walletAnswers || {});
   const actions = createAccountActions({
     wallet: {
@@ -17,7 +18,14 @@ function harness(initial, walletAnswers, ids) {
       remove: (providerId, id) => { state.removed.push([providerId, id]); return Promise.resolve(answers.remove); },
     },
     getAccounts: () => state.accounts,
-    setAccounts: (list) => { state.accounts = list; },
+    updateAccounts: (change) => {
+      state.updates += 1;
+      if (options.fail) {
+        return Promise.reject(new Error('the settings file was not saved'));
+      }
+      state.accounts = change(options.file || state.accounts);
+      return Promise.resolve(state.accounts);
+    },
     findProvider: findProvider,
     newId: () => (queue.length > 0 ? queue.shift() : 'anew000000000'),
     recheck: (id) => state.rechecks.push(id),
@@ -129,4 +137,53 @@ test('addMany refuses when no item has a name, and stops at the first failure', 
   const failed = await actions.addMany('claude', [{ name: 'bad', fields: { org: '../x' } }, { name: 'good', fields: { org: 'org-2' } }]);
   assert.equal(failed.invalid, INVALID.FIELD);
   assert.deepEqual(state.accounts, []);
+});
+
+test('a settings file that cannot be written fails the add and takes the new key out of the wallet again', async () => {
+  const { actions, state } = harness([], {}, [], { fail: true });
+  await assert.rejects(actions.add({ service: 'minimax', name: 'me', key: KEY }), /not saved/);
+  assert.deepEqual(state.saved, [['minimax', 'anew000000000', KEY]]);
+  assert.deepEqual(state.removed, [['minimax', 'anew000000000']]);
+  assert.deepEqual(state.accounts, []);
+  assert.deepEqual(state.rechecks, []);
+});
+
+test('the add still fails with the settings error when the wallet also cannot take the key back', async () => {
+  const { actions, state } = harness([], { remove: { ok: false, code: WALLET_ERROR.REMOVE_FAILED } }, [], { fail: true });
+  await assert.rejects(actions.add({ service: 'minimax', name: 'me', key: KEY }), /not saved/);
+  assert.deepEqual(state.removed, [['minimax', 'anew000000000']]);
+  assert.equal(state.updates, 1);
+});
+
+test('a settings file that cannot be written fails edit, delete and a no key add without a wallet clean up', async () => {
+  const { actions, state } = harness([{ id: 'a1', service: 'claude', name: 'old', org: 'org-1' }], {}, [], { fail: true });
+  await assert.rejects(actions.edit('a1', { name: 'new' }), /not saved/);
+  await assert.rejects(actions.remove('a1'), /not saved/);
+  await assert.rejects(actions.add({ service: 'claude', name: 'me', fields: { org: 'org-2' } }), /not saved/);
+  assert.deepEqual(state.removed, []);
+  assert.deepEqual(state.accounts, [{ id: 'a1', service: 'claude', name: 'old', org: 'org-1' }]);
+});
+
+test('every change is applied to the list the settings file holds now, so the account of another widget stays', async () => {
+  const shared = [{ id: 'aother', service: 'claude', name: 'from the panel', org: 'org-9' }];
+  const { actions, state } = harness([], {}, [], { file: shared });
+  await actions.add({ service: 'claude', name: 'me', fields: { org: 'org-1' } });
+  assert.deepEqual(state.accounts.map((item) => item.id), ['aother', 'anew000000000']);
+});
+
+test('a wallet that throws while it takes the key back still leaves the settings error', async () => {
+  const removed = [];
+  const actions = createAccountActions({
+    wallet: {
+      save: () => Promise.resolve({ ok: true, value: { replaced: false } }),
+      remove: (providerId, id) => { removed.push([providerId, id]); return Promise.reject(new Error('the session bus is gone')); },
+    },
+    getAccounts: () => [],
+    updateAccounts: () => Promise.reject(new Error('the settings file was not saved')),
+    findProvider: findProvider,
+    newId: () => 'anew000000000',
+    recheck: () => assert.fail('nothing is checked'),
+  });
+  await assert.rejects(actions.add({ service: 'minimax', name: 'me', key: KEY }), /not saved/);
+  assert.deepEqual(removed, [['minimax', 'anew000000000']]);
 });

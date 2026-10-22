@@ -91,7 +91,7 @@ PlasmaExtras.Representation {
     PlasmaComponents.Button {
         objectName: "emptyAddButton"
         anchors.centerIn: parent
-        visible: !full.viewModel.hasAccounts && !full.settingsOpen
+        visible: !full.viewModel.hasAccounts && !full.settingsOpen && (full.controller ? full.controller.settingsLoaded : false)
         text: "Add account"
         icon.name: "list-add"
         onClicked: full.openSettings(true)

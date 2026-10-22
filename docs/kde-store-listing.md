@@ -62,9 +62,10 @@ License: GPL-3.0-or-later.
 2. Usage, limits and spend for Claude, ChatGPT, OpenAI API, Anthropic API, xAI API, OpenCode Go, OpenCode Zen, MiniMax, Requesty, Hugging Face and JetBrains AI.
 3. Several accounts per service, added, edited, reordered and deleted inside the popup.
 4. Keys saved in KWallet, with an Unlock KWallet button when the wallet is locked.
-5. Estimated reset times for Claude.
-6. One refresh setting for all accounts, 30 seconds by default, and a backoff when a service limits requests.
-7. Yellow and red values that stay readable on light and dark themes.
+5. Accounts kept in the widget's own settings file, so a Global Theme layout or a panel reset does not remove them, and every copy of the widget shares them.
+6. Estimated reset times for Claude.
+7. One refresh setting for all accounts, 30 seconds by default, and a backoff when a service limits requests.
+8. Yellow and red values that stay readable on light and dark themes.
 
 ---
 

@@ -9,6 +9,8 @@ TestCase {
     name: "LockedWallet"
     when: windowShown
 
+    property int settingsFileCount: 0
+
     Window {
         id: stage
 
@@ -46,8 +48,15 @@ TestCase {
         }
     }
 
+    function controllerWith(configuration, properties) {
+        settingsFileCount += 1
+        const controller = createTemporaryObject(controllerComponent, suite, Object.assign({ legacyConfiguration: configuration, settingsFileName: "ai-usage-locked-" + settingsFileCount + "rc" }, properties || {}))
+        tryVerify(() => controller.settingsLoaded, 20000, "the settings file was read")
+        return controller
+    }
+
     function test_aLockedWalletShowsTheUnlockButtonAndUnlockAsksKWallet() {
-        const controller = createTemporaryObject(controllerComponent, suite, { configuration: createTemporaryObject(configurationComponent, suite) })
+        const controller = controllerWith(createTemporaryObject(configurationComponent, suite))
         tryVerify(() => controller.monitor.snapshot().every(entry => !entry.isLoading && entry.lastAttemptAt !== null), 60000, "the check finished")
         compare(controller.viewModel.walletLocked, true)
         const full = createTemporaryObject(fullComponent, stage.contentItem, { controller: controller })
@@ -65,7 +74,7 @@ TestCase {
 
     function test_aLockedWalletRefusesANewKeyAndOffersTheUnlockButton() {
         const configuration = createTemporaryObject(configurationComponent, suite, { accounts: "" })
-        const controller = createTemporaryObject(controllerComponent, suite, { configuration: configuration })
+        const controller = controllerWith(configuration)
         const full = createTemporaryObject(fullComponent, stage.contentItem, { controller: controller })
         full.openSettings(true)
         const settings = findChild(full, "settingsView")
@@ -79,13 +88,14 @@ TestCase {
         compare(settings.lastWalletCode, "no_answer")
         compare(findChild(settings, "settingsStatus").text, "KWallet did not answer. Unlock KWallet and try again.")
         compare(findChild(settings, "settingsUnlock").visible, true)
-        compare(configuration.accounts, "")
+        compare(controller.accounts.length, 0)
+        compare(controller.settingsValues.accounts, null)
         compare(findChild(form, "keyField").text, "scenario-" + "locked-" + "k3y")
     }
 
     function test_theWaitForKWalletCanBeCancelledAtOnce() {
         const configuration = createTemporaryObject(configurationComponent, suite, { accounts: "" })
-        const controller = createTemporaryObject(controllerComponent, suite, { configuration: configuration, walletOpenWaitMs: 60000 })
+        const controller = controllerWith(configuration, { walletOpenWaitMs: 60000 })
         const full = createTemporaryObject(fullComponent, stage.contentItem, { controller: controller })
         full.openSettings(true)
         const settings = findChild(full, "settingsView")
@@ -105,12 +115,13 @@ TestCase {
         compare(waiting.visible, false)
         compare(form.visible, true)
         compare(findChild(form, "keyField").text, "scenario-" + "wait-" + "k3y")
-        compare(configuration.accounts, "")
+        compare(controller.accounts.length, 0)
+        compare(controller.settingsValues.accounts, null)
     }
 
     function test_theFormCancelAlsoStopsTheWait() {
         const configuration = createTemporaryObject(configurationComponent, suite, { accounts: "" })
-        const controller = createTemporaryObject(controllerComponent, suite, { configuration: configuration, walletOpenWaitMs: 60000 })
+        const controller = controllerWith(configuration, { walletOpenWaitMs: 60000 })
         const full = createTemporaryObject(fullComponent, stage.contentItem, { controller: controller })
         full.openSettings(true)
         const settings = findChild(full, "settingsView")
