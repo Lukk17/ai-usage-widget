@@ -1,0 +1,13 @@
+{
+  "status": 429,
+  "headers": {
+    "Content-Type": "application/json",
+    "Retry-After": "120"
+  },
+  "body": {
+    "error": {
+      "message": "Rate limit reached",
+      "type": "requests"
+    }
+  }
+}

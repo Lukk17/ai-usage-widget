@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "data": [ { "starting_at": "2026-10-01T00:00:00Z", "results": [ { "amount": 1.5, "currency": "EUR" } ] } ], "has_more": false }
+}

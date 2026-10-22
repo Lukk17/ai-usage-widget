@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "text/html" },
+  "bodyText": "<html><body>Bad gateway</body></html>"
+}

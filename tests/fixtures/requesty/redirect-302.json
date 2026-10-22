@@ -1,0 +1,5 @@
+{
+  "status": 302,
+  "headers": { "Location": "https://redirect-target.test/landing" },
+  "bodyText": ""
+}

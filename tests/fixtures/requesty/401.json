@@ -1,0 +1,5 @@
+{
+  "status": 401,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "error": { "origin": "router", "message": "missing or empty Authorization header" } }
+}

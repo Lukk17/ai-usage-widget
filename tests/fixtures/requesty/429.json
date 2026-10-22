@@ -1,0 +1,5 @@
+{
+  "status": 429,
+  "headers": { "Content-Type": "application/json", "Retry-After": "120" },
+  "body": { "error": { "origin": "router", "message": "Rate limit exceeded" } }
+}

@@ -1,0 +1,5 @@
+{
+  "status": 404,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "type": "error", "error": { "type": "not_found_error", "message": "redacted: not found" } }
+}

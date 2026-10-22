@@ -1,0 +1,137 @@
+{
+  "hosts": {
+    "api-v2.requesty.ai": "127.0.0.10",
+    "api.anthropic.com": "127.0.0.10",
+    "api.minimax.io": "127.0.0.10",
+    "opencode.ai": "127.0.0.10",
+    "api.openai.com": "127.0.0.10",
+    "management-api.x.ai": "127.0.0.10",
+    "huggingface.co": "127.0.0.10",
+    "redirect-target.test": "127.0.0.20"
+  },
+  "accounts": [
+    {
+      "id": "arequesty",
+      "service": "requesty",
+      "name": "work@example.com",
+      "scenario": "requesty-happy"
+    },
+    {
+      "id": "aanthropic",
+      "service": "anthropic",
+      "name": "team@example.com",
+      "scenario": "anthropic-happy"
+    },
+    {
+      "id": "aminimax",
+      "service": "minimax",
+      "name": "home@example.com",
+      "scenario": "minimax-percent"
+    },
+    {
+      "id": "aredirect",
+      "service": "minimax",
+      "name": "redirect@example.com",
+      "scenario": "redirect"
+    },
+    {
+      "id": "ahuge",
+      "service": "minimax",
+      "name": "huge@example.com",
+      "scenario": "huge"
+    },
+    {
+      "id": "agoalice",
+      "service": "opencodeGo",
+      "name": "alice@example.com",
+      "scenario": ""
+    },
+    {
+      "id": "agobob",
+      "service": "opencodeGo",
+      "name": "bob@example.com",
+      "scenario": "go-happy"
+    },
+    {
+      "id": "azen",
+      "service": "opencodeZen",
+      "name": "zen@example.com",
+      "scenario": "zen-happy"
+    },
+    {
+      "id": "aopenai",
+      "service": "openai",
+      "name": "org@example.com",
+      "scenario": "openai-happy"
+    },
+    {
+      "id": "axai",
+      "service": "xai",
+      "name": "xai@example.com",
+      "teamId": "00000000-0000-4000-8000-000000000001",
+      "scenario": "xai-happy"
+    },
+    {
+      "id": "ahf",
+      "service": "huggingFace",
+      "name": "typed name",
+      "scenario": "hf-happy"
+    },
+    {
+      "id": "aclaude",
+      "service": "claude",
+      "name": "claude@example.com",
+      "org": "00000000-0000-4000-8000-0000000000aa",
+      "scenario": ""
+    },
+    {
+      "id": "achatgpt",
+      "service": "chatgpt",
+      "name": "chatgpt@example.com",
+      "scenario": ""
+    },
+    {
+      "id": "ajetbrains",
+      "service": "jetbrains",
+      "name": "jetbrains@example.com",
+      "scenario": ""
+    }
+  ],
+  "scenarios": {
+    "requesty-happy": {
+      "/v1/manage/apikey/self": "requesty/apikey-self-200",
+      "/v1/manage/org": "requesty/org-403"
+    },
+    "anthropic-happy": {
+      "/v1/organizations/cost_report": "anthropic/cost-200",
+      "/v1/organizations/usage_report/messages": "anthropic/usage-200"
+    },
+    "minimax-percent": {
+      "/v1/token_plan/remains": "minimax/200-with-percent"
+    },
+    "redirect": {
+      "*": "special/redirect"
+    },
+    "huge": {
+      "*": "special/huge"
+    },
+    "go-happy": {
+      "/zen/go/v1/usage": "opencode-go/200"
+    },
+    "zen-happy": {
+      "/console/api/v1/budgets/members": "opencode-zen/200"
+    },
+    "openai-happy": {
+      "/v1/organization/costs": "openai/costs-200",
+      "/v1/organization/usage/completions": "openai/usage-200"
+    },
+    "xai-happy": {
+      "/v1/billing/teams/00000000-0000-4000-8000-000000000001/prepaid/balance": "xai/balance-200",
+      "/v1/billing/teams/00000000-0000-4000-8000-000000000001/postpaid/invoice/preview": "xai/invoice-200"
+    },
+    "hf-happy": {
+      "/api/whoami-v2": "huggingface/whoami-200",
+      "/api/settings/billing/usage-by-inference-session": "huggingface/usage-200"
+    }
+  }
+}

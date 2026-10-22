@@ -1,0 +1,5 @@
+{
+  "status": 401,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "base_resp": { "status_code": 401, "status_msg": "redacted: invalid api key" } }
+}

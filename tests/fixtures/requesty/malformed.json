@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "bodyText": "{\"monthly_spend\": 12.3, \"monthly_li"
+}

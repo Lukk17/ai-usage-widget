@@ -1,0 +1,5 @@
+{
+  "status": 429,
+  "headers": { "Content-Type": "application/json", "retry-after": "60" },
+  "body": { "type": "error", "error": { "type": "rate_limit_error", "message": "rate limited" } }
+}

@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "data": [ "2026-10-01" ], "has_more": false }
+}

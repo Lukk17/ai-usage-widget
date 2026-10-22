@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "object": "page",
+    "data": [
+      {
+        "object": "bucket",
+        "start_time": 1790812800,
+        "end_time": 1790899200,
+        "results": null
+      }
+    ],
+    "has_more": false,
+    "next_page": null
+  }
+}

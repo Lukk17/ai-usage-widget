@@ -1,0 +1,10 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": {
+    "usage": {
+      "rolling": { "status": "ok", "percent": "37", "resetsAt": 1776520200 },
+      "weekly": { "status": "ok", "percent": 62, "resetsAt": "2026-10-19T00:00:00.000Z" }
+    }
+  }
+}

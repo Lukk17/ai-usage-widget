@@ -1,0 +1,28 @@
+{
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "coreInvoice": {
+      "lines": [],
+      "amountBeforeVat": "733",
+      "vatCost": "0",
+      "amountAfterVat": "733",
+      "autoCreditsIssued": "0",
+      "defaultCreditsIssued": "0",
+      "prepaidCredits": {
+        "val": "2500"
+      },
+      "prepaidCreditsUsed": {
+        "val": "733"
+      }
+    },
+    "effectiveSpendingLimit": "10000",
+    "defaultCredits": "0",
+    "billingCycle": {
+      "year": 2026,
+      "month": 10
+    }
+  }
+}

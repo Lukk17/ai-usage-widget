@@ -1,0 +1,5 @@
+{
+  "status": 429,
+  "headers": { "Content-Type": "application/json", "Retry-After": "Sun, 18 Oct 2026 12:30:00 GMT" },
+  "body": { "base_resp": { "status_code": 1002, "status_msg": "redacted: rate limit" } }
+}

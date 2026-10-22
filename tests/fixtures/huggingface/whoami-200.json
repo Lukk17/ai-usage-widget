@@ -1,0 +1,27 @@
+{
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "type": "user",
+    "id": "000000000000000000000001",
+    "name": "placeholder-user",
+    "fullname": "Placeholder User",
+    "email": "user@example.com",
+    "canPay": true,
+    "billingMode": "postpaid",
+    "isPro": true,
+    "periodEnd": 1793491200,
+    "emailVerified": true,
+    "orgs": [],
+    "auth": {
+      "type": "access_token",
+      "accessToken": {
+        "displayName": "ai-usage-widget",
+        "role": "fineGrained",
+        "createdAt": "2026-10-01T00:00:00.000Z"
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "bodyText": "[{\"email\": \"alice@example.com\", \"spent_micro_cents\": \"56"
+}

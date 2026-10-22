@@ -1,0 +1,5 @@
+{
+  "status": 402,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "base_resp": { "status_code": 402, "status_msg": "redacted: insufficient balance" } }
+}

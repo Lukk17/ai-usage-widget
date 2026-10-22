@@ -1,0 +1,44 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": {
+    "data": [
+      {
+        "starting_at": "2026-10-01T00:00:00Z",
+        "ending_at": "2026-10-02T00:00:00Z",
+        "results": [
+          {
+            "account_id": null,
+            "api_key_id": null,
+            "cache_creation": { "ephemeral_1h_input_tokens": 1000, "ephemeral_5m_input_tokens": 500 },
+            "cache_read_input_tokens": 200000,
+            "context_window": null,
+            "inference_geo": null,
+            "model": null,
+            "output_tokens": 45000,
+            "server_tool_use": { "web_search_requests": 3 },
+            "service_account_id": null,
+            "service_tier": null,
+            "speed": null,
+            "uncached_input_tokens": 1298500,
+            "workspace_id": null
+          }
+        ]
+      },
+      {
+        "starting_at": "2026-10-02T00:00:00Z",
+        "ending_at": "2026-10-03T00:00:00Z",
+        "results": [
+          {
+            "cache_creation": { "ephemeral_1h_input_tokens": 0, "ephemeral_5m_input_tokens": 0 },
+            "cache_read_input_tokens": 0,
+            "output_tokens": 5000,
+            "uncached_input_tokens": 500000
+          }
+        ]
+      }
+    ],
+    "has_more": false,
+    "next_page": null
+  }
+}

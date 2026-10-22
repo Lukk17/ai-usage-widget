@@ -1,0 +1,18 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Łukasz Sarna"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "Shows AI usage, limits and spend for several services and accounts",
+        "Icon": "office-chart-bar",
+        "Id": "com.github.lukk17.aiusage",
+        "License": "GPL-3.0-or-later",
+        "Name": "AI Usage",
+        "Version": "1.0.0"
+    },
+    "X-Plasma-API-Minimum-Version": "6.4"
+}

@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "base_resp": { "status_code": 1041, "status_msg": "redacted message for code 1041" } }
+}

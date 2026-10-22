@@ -1,0 +1,5 @@
+{
+  "status": 500,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "type": "error", "error": { "type": "api_error", "message": "internal error" } }
+}

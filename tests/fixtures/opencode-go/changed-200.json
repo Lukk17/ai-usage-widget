@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "limits": [ { "window": "5h", "used": 0.37 } ] }
+}

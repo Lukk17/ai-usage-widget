@@ -1,0 +1,5 @@
+2026-10-18 11:00:00,001 [   1000]   INFO - #c.i.ide.SystemHealthMonitor - placeholder start line
+2026-10-18 11:30:00,123 [ 200000]   INFO - #c.i.m.l.a.QuotaManager2Impl - New quota state is: Available(quota=JbaiQuota(license=PLACEHOLDERLICENSE1, current=100.5, maximum=1000000, quotaID=JbaiQuotaId(quotaId=PLACEHOLDERQUOTA1, userId=null), until=2027-10-31T21:00:00Z, tariffQuota=Details(current=100.5, maximum=1000000, available=999899.5), topUpQuota=Details(current=0, maximum=0, available=0)))
+2026-10-18 11:45:00,000 [ 300000]   INFO - #c.i.m.l.a.QuotaManager2Impl - New quota state is: Exhausted(placeholder)
+2026-10-18 11:59:00,456 [ 400000]   INFO - #c.i.m.l.a.QuotaManager2Impl - New quota state is: Available(quota=JbaiQuota(license=PLACEHOLDERLICENSE1, current=380.75, maximum=1000000, quotaID=JbaiQuotaId(quotaId=PLACEHOLDERQUOTA1, userId=null), until=2027-10-31T21:00:00Z, tariffQuota=Details(current=380.75, maximum=1000000, available=999619.25), topUpQuota=Details(current=0, maximum=0, available=0)))
+2026-10-18 12:00:00,000 [ 400100]   INFO - #c.i.ide.SystemHealthMonitor - placeholder end line

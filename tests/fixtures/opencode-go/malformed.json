@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "bodyText": "{\"usage\": {\"rolling\": {\"percent\": 3"
+}

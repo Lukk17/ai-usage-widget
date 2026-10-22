@@ -1,0 +1,5 @@
+{
+  "status": 403,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "base_resp": { "status_code": 403, "status_msg": "redacted: forbidden" } }
+}

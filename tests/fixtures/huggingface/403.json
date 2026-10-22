@@ -1,0 +1,9 @@
+{
+  "status": 403,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "error": "This token does not have the user.billing.read permission"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "status": 401,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "type": "error", "error": { "type": "AuthError", "message": "Unauthorized" } }
+}

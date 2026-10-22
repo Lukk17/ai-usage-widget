@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "effectiveSpendingLimit": "10000",
+    "billingCycle": {
+      "year": 2026,
+      "month": 10
+    }
+  }
+}

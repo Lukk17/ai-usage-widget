@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "base_resp": { "status_code": 0, "status_msg": "success" }, "model_remains": [ { "model_name": "MiniMax-M*", "quota": "plenty" } ] }
+}

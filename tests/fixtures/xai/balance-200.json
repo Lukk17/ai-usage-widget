@@ -1,0 +1,41 @@
+{
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "changes": [
+      {
+        "teamId": "00000000-0000-4000-8000-000000000001",
+        "changeOrigin": "PURCHASE",
+        "topupStatus": "SUCCEEDED",
+        "amount": {
+          "val": "-2500"
+        },
+        "invoiceId": "inv_placeholder",
+        "invoiceNumber": "0001",
+        "createTime": "2026-10-01T08:00:00Z",
+        "spendBpKeyYear": 2026,
+        "spendBpKeyMonth": 10,
+        "createTs": "2026-10-01T08:00:00Z",
+        "paymentProcessor": {
+          "kind": "STRIPE",
+          "externalParty": "",
+          "externalInvoiceId": ""
+        }
+      },
+      {
+        "teamId": "00000000-0000-4000-8000-000000000001",
+        "changeOrigin": "SPEND",
+        "topupStatus": "INVALID_STATUS",
+        "amount": {
+          "val": "733"
+        },
+        "createTime": "2026-10-10T08:00:00Z"
+      }
+    ],
+    "total": {
+      "val": "-1767"
+    }
+  }
+}

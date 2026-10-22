@@ -1,0 +1,5 @@
+{
+  "status": 502,
+  "headers": { "Content-Type": "text/html" },
+  "bodyText": "<html>Bad Gateway</html>"
+}

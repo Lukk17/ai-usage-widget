@@ -1,0 +1,26 @@
+{
+  "status": 200,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "currency": "eur",
+    "periods": [
+      {
+        "period": "2026-10-01T00:00:00.000Z",
+        "sessions": [
+          {
+            "id": "session_placeholder_1",
+            "requestCount": 40,
+            "costCents": 123.5
+          },
+          {
+            "id": "session_placeholder_2",
+            "requestCount": 2,
+            "costCents": 10
+          }
+        ]
+      }
+    ]
+  }
+}

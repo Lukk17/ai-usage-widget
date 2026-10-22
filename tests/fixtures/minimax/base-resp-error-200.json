@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "base_resp": { "status_code": 1028, "status_msg": "redacted: quota exhausted" } }
+}

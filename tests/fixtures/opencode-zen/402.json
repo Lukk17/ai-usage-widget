@@ -1,0 +1,5 @@
+{
+  "status": 402,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "error": "redacted: payment required" }
+}

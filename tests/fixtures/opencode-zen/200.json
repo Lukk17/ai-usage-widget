@@ -1,0 +1,26 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": [
+    {
+      "user_id": "usr_redacted_0001",
+      "email": "alice@example.com",
+      "limit_micro_cents": "7525000000",
+      "spent_micro_cents": "5643750000",
+      "exceeded": false,
+      "resets_at": "2026-11-01T00:00:00.000Z",
+      "source": "custom",
+      "updated_at": "2026-10-01T08:00:00.000Z"
+    },
+    {
+      "user_id": "usr_redacted_0002",
+      "email": "bob@example.com",
+      "limit_micro_cents": null,
+      "spent_micro_cents": "123000000",
+      "exceeded": false,
+      "resets_at": "2026-11-01T00:00:00.000Z",
+      "source": null,
+      "updated_at": null
+    }
+  ]
+}

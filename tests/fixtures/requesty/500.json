@@ -1,0 +1,5 @@
+{
+  "status": 500,
+  "headers": { "Content-Type": "application/json" },
+  "body": { "error": { "origin": "router", "message": "internal server error" } }
+}

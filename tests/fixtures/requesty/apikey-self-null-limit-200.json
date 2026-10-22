@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": {
+    "id": "00000000-0000-4000-8000-000000000003",
+    "name": "redacted-key-name",
+    "logging": false,
+    "monthly_spend": 7.25,
+    "monthly_limit": null,
+    "permissions": { "manage": "none", "completions": "write" },
+    "created_at": "2026-09-01T10:00:00Z"
+  }
+}

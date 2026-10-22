@@ -1,0 +1,56 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": {
+    "base_resp": { "status_code": 0, "status_msg": "success" },
+    "model_remains": [
+      {
+        "model_name": "MiniMax-M*",
+        "start_time": 1776355200000,
+        "end_time": 1776373200000,
+        "remains_time": 3600000,
+        "current_interval_total_count": 1500,
+        "current_interval_usage_count": 300,
+        "current_interval_remaining_percent": 80,
+        "current_interval_status": 1,
+        "current_weekly_total_count": 10000,
+        "current_weekly_usage_count": 2500,
+        "current_weekly_remaining_percent": 25,
+        "current_weekly_status": 1,
+        "weekly_start_time": 1776009600000,
+        "weekly_end_time": 1776614400000,
+        "weekly_remains_time": 248351954
+      },
+      {
+        "model_name": "speech-hd",
+        "start_time": 1776355200000,
+        "end_time": 1776441600000,
+        "remains_time": 75551954,
+        "current_interval_total_count": 9000,
+        "current_interval_usage_count": 9000,
+        "current_interval_status": 1,
+        "current_weekly_total_count": 0,
+        "current_weekly_usage_count": 0,
+        "current_weekly_status": 3,
+        "weekly_start_time": 1776009600000,
+        "weekly_end_time": 1776614400000,
+        "weekly_remains_time": 248351954
+      },
+      {
+        "model_name": "video",
+        "start_time": 1776355200000,
+        "end_time": 1776441600000,
+        "remains_time": 75551954,
+        "current_interval_total_count": 0,
+        "current_interval_usage_count": 0,
+        "current_interval_status": 3,
+        "current_weekly_total_count": 0,
+        "current_weekly_usage_count": 0,
+        "current_weekly_status": 3,
+        "weekly_start_time": 1776009600000,
+        "weekly_end_time": 1776614400000,
+        "weekly_remains_time": 248351954
+      }
+    ]
+  }
+}

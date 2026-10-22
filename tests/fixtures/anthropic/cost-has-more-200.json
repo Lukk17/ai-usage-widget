@@ -1,0 +1,11 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": {
+    "data": [
+      { "starting_at": "2026-10-01T00:00:00Z", "ending_at": "2026-10-02T00:00:00Z", "results": [ { "amount": "100", "currency": "USD" } ] }
+    ],
+    "has_more": true,
+    "next_page": "page_redacted"
+  }
+}

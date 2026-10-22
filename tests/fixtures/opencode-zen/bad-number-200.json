@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "headers": { "Content-Type": "application/json" },
+  "body": [ { "user_id": "usr_redacted_0001", "email": "alice@example.com", "limit_micro_cents": "lots", "spent_micro_cents": "abc", "exceeded": false, "resets_at": "2026-11-01T00:00:00.000Z", "source": "custom", "updated_at": null } ]
+}
