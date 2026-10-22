@@ -93,7 +93,7 @@ ai, usage, quota, limits, spend, api, monitor, kwallet, claude, openai, plasma6,
 | 6.3 | Original | Yes, this is the original work of the author |
 | 6.4 | License | GPL-3.0-or-later, the same as [LICENSE](../LICENSE) |
 | 6.5 | Version | 1.0.0 |
-| 6.6 | Source link | `https://github.com/OWNER/REPOSITORY`, a placeholder until the GitHub repository exists |
+| 6.6 | Source link | `https://github.com/Lukk17/ai-usage-widget` |
 | 6.7 | Logo | [docs/store-assets/ai-usage-logo-512.png](store-assets/ai-usage-logo-512.png), source [docs/store-assets/ai-usage-logo.svg](store-assets/ai-usage-logo.svg) |
 | 6.8 | Tags | See 4 |
 | 6.9 | Description | See 2 |
