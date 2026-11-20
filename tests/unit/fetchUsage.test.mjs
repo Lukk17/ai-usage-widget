@@ -5,7 +5,7 @@ import { fetchUsage } from '../../package/contents/code/core/fetchUsage.mjs';
 import { commandTimeoutMs } from '../../package/contents/code/core/curlCommand.mjs';
 import { ERROR_KIND, REASON, failure } from '../../package/contents/code/core/http.mjs';
 import { makeUsage, usageText, LABEL, succeeded } from '../../package/contents/code/core/usage.mjs';
-import { TEST_BOUNDARY, testAccount } from './support/replies.mjs';
+import { TEST_BOUNDARY, checkOutput, testAccount } from './support/replies.mjs';
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 const BEARER = { header: 'Authorization', prefix: 'Bearer ' };
@@ -30,14 +30,14 @@ function runner(stdout, stderr) {
   const calls = [];
   const runCommand = (command, timeoutMs) => {
     calls.push({ command, timeoutMs });
-    return stdout instanceof Error ? Promise.reject(stdout) : Promise.resolve({ exitCode: 0, stdout, stderr: stderr || '' });
+    return stdout instanceof Error ? Promise.reject(stdout) : Promise.resolve({ exitCode: 0, stdout: checkOutput([stdout]), stderr: stderr || '' });
   };
   return { runCommand, calls };
 }
 
 function check(prov, stdout, stderr) {
   const fake = runner(stdout, stderr);
-  return fetchUsage(prov, testAccount(prov, 'work'), fake.runCommand, () => NOW, TEST_BOUNDARY).then((outcome) => ({ outcome, calls: fake.calls }));
+  return fetchUsage(prov, testAccount(prov, 'work'), fake.runCommand, () => NOW).then((outcome) => ({ outcome, calls: fake.calls }));
 }
 
 function steppingClock(times) {
@@ -86,7 +86,7 @@ test('a rate limit on an optional request still pauses the whole service', async
 test('Retry-After is measured from the time the answer came back, not from the start of the check', async () => {
   const fake = runner(block('main', 429, '60') + block('extra', 200));
   const later = NOW + 40000;
-  const outcome = await fetchUsage(provider({}), testAccount(provider({}), 'work'), fake.runCommand, steppingClock([NOW, later]), TEST_BOUNDARY);
+  const outcome = await fetchUsage(provider({}), testAccount(provider({}), 'work'), fake.runCommand, steppingClock([NOW, later]));
   assert.equal(outcome.error.retryAt, later + 60000);
 });
 
@@ -94,7 +94,7 @@ test('the provider reads the answer with the time it came back', async () => {
   const seen = [];
   const timed = provider({ interpret: (results, now) => { seen.push(now); return succeeded(makeUsage({})); } });
   const fake = runner(block('main', 200) + block('extra', 200));
-  await fetchUsage(timed, testAccount(timed, 'work'), fake.runCommand, steppingClock([NOW, NOW + 9000]), TEST_BOUNDARY);
+  await fetchUsage(timed, testAccount(timed, 'work'), fake.runCommand, steppingClock([NOW, NOW + 9000]));
   assert.deepEqual(seen, [NOW + 9000]);
 });
 
@@ -109,8 +109,14 @@ test('a runner that rejects means the check could not run', async () => {
 });
 
 test('a runner that timed out is a request timeout', async () => {
-  const outcome = await fetchUsage(provider({}), testAccount(provider({}), 'work'), () => Promise.resolve({ timedOut: true }), () => NOW, TEST_BOUNDARY);
+  const outcome = await fetchUsage(provider({}), testAccount(provider({}), 'work'), () => Promise.resolve({ timedOut: true }), () => NOW);
   assert.deepEqual(outcome.error, failure(ERROR_KIND.CANNOT_CONNECT, REASON.REQUEST_TIMEOUT));
+});
+
+test('output that does not start with the boundary line means the check could not run', async () => {
+  const runCommand = () => Promise.resolve({ exitCode: 1, stdout: block('main', 200) + block('extra', 200), stderr: '' });
+  const outcome = await fetchUsage(provider({}), testAccount(provider({}), 'work'), runCommand, () => NOW);
+  assert.deepEqual(outcome, { ok: false, error: failure(ERROR_KIND.CANNOT_CONNECT, REASON.COMMAND_FAILED) });
 });
 
 test('the provider override is used to classify replies', async () => {
@@ -134,7 +140,7 @@ test('a provider that throws while building requests gives an unexpected answer 
 
 test('an unsafe account never reaches a command', async () => {
   const fake = runner('');
-  const outcome = await fetchUsage(provider({}), testAccount(provider({}), 'a;id'), fake.runCommand, () => NOW, TEST_BOUNDARY);
+  const outcome = await fetchUsage(provider({}), testAccount(provider({}), 'a;id'), fake.runCommand, () => NOW);
   assert.deepEqual(outcome.error, failure(ERROR_KIND.UNEXPECTED_ANSWER, REASON.INTERNAL));
   assert.equal(fake.calls.length, 0);
 });

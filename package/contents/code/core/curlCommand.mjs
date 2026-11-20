@@ -2,16 +2,19 @@ import { ERROR_KIND, REASON, failure } from './http.mjs';
 import { quote, quoteUrl } from './shell.mjs';
 import { buildLookupPart, buildSearchPart } from './secrets.mjs';
 import { SECOND_MS } from './units.mjs';
-import { randomHex } from './values.mjs';
 
 export const SECRET_TOOL_TIMEOUT_SECONDS = 10;
 export const CURL_MAX_TIME_SECONDS = 20;
 export const CURL_KILL_AFTER_SECONDS = 25;
 export const MAX_RESPONSE_BYTES = 1048576;
-export const BOUNDARY_PATTERN = /^aiu[0-9a-f]{24}$/;
+
+const BOUNDARY_PREFIX = 'aiu';
+const BOUNDARY_BYTES = 12;
+const BOUNDARY_DIGITS = 2 * BOUNDARY_BYTES;
+const BOUNDARY_LENGTH = BOUNDARY_PREFIX.length + BOUNDARY_DIGITS;
+export const BOUNDARY_PATTERN = new RegExp('^' + BOUNDARY_PREFIX + '[0-9a-f]{' + BOUNDARY_DIGITS + '}$');
 
 const COMMAND_MARGIN_SECONDS = 5;
-const BOUNDARY_DIGITS = 24;
 const REQUEST_ID_PATTERN = /^[a-z][a-z0-9]{0,15}$/;
 const SECRET_TOOL_TIMED_OUT = '124';
 const TOOL_MISSING_CODES = ['126', '127'];
@@ -19,23 +22,25 @@ const CURL_TIMEOUT_CODES = [28, 124];
 const CURL_CONNECTION_CODES = [6, 7];
 const CURL_TOOL_MISSING_CODES = [126, 127];
 const CURL_TOO_LARGE_CODE = 63;
-const SAFE_START = 'ulimit -c 0; set +a +x +v; unset SSLKEYLOGFILE key rc found';
+const SAFE_START = 'ulimit -c 0; set +a +x +v; unset SSLKEYLOGFILE key rc found boundary';
+const MAKE_BOUNDARY = 'boundary=' + BOUNDARY_PREFIX + '$(od -An -N' + BOUNDARY_BYTES + " -tx1 /dev/urandom | tr -d ' \\n')";
+const BOUNDARY_GUARD = 'if [ "${#boundary}" -ne ' + BOUNDARY_LENGTH + ' ]; then exit 1; fi; '
+  + 'case "${boundary#' + BOUNDARY_PREFIX + '}" in *[!0-9a-f]*) exit 1;; esac';
+const PRINT_BOUNDARY = "printf '%s\\n' \"$boundary\"";
+const BOUNDARY = '"$boundary"';
 const HEADER_FORMAT = '%s: %s%s\\n';
-
-export function newBoundary(random) {
-  return 'aiu' + randomHex(BOUNDARY_DIGITS, random);
-}
+const WRITE_OUT = '"\\n$boundary end %{http_code} %header{retry-after}\\n"';
 
 export function commandTimeoutMs(requestCount) {
   return (2 * SECRET_TOOL_TIMEOUT_SECONDS + requestCount * CURL_KILL_AFTER_SECONDS + COMMAND_MARGIN_SECONDS) * SECOND_MS;
 }
 
-function marker(boundary, word, value) {
-  return 'printf ' + quote('%s ' + word + ' %s\\n') + ' ' + quote(boundary) + ' ' + value;
+function marker(word, value) {
+  return 'printf ' + quote('%s ' + word + ' %s\\n') + ' ' + BOUNDARY + ' ' + value;
 }
 
-function lineMarker(boundary, word, value) {
-  return 'printf ' + quote('\\n%s ' + word + ' %s\\n') + ' ' + quote(boundary) + ' ' + value;
+function lineMarker(word, value) {
+  return 'printf ' + quote('\\n%s ' + word + ' %s\\n') + ' ' + BOUNDARY + ' ' + value;
 }
 
 function curlPart(spec, request) {
@@ -43,29 +48,25 @@ function curlPart(spec, request) {
     throw new Error('the request id is not allowed');
   }
   const fixedHeaders = request.headers.map((header) => '-H ' + quote(header)).join(' ');
-  const writeOut = '\\n' + spec.boundary + ' end %{http_code} %header{retry-after}\\n';
   return [
-    marker(spec.boundary, 'begin', quote(request.id)),
+    marker('begin', quote(request.id)),
     'printf ' + quote(HEADER_FORMAT) + ' ' + quote(spec.auth.header) + ' ' + quote(spec.auth.prefix) + ' "$key" | timeout ' + CURL_KILL_AFTER_SECONDS
       + ' curl --disable --silent --show-error --globoff --tlsv1.2 --proto ' + quote('=https') + ' --max-redirs 0 --max-time ' + CURL_MAX_TIME_SECONDS
       + ' --max-filesize ' + MAX_RESPONSE_BYTES + ' -H @- ' + (fixedHeaders ? fixedHeaders + ' ' : '')
-      + '-w ' + quote(writeOut) + ' ' + quoteUrl(request.url),
-    lineMarker(spec.boundary, 'curl', '"$?"'),
+      + '-w ' + WRITE_OUT + ' ' + quoteUrl(request.url),
+    lineMarker('curl', '"$?"'),
   ].join('; ');
 }
 
 export function buildCheckCommand(spec) {
-  if (!BOUNDARY_PATTERN.test(spec.boundary)) {
-    throw new Error('the boundary is not allowed');
-  }
   const lockedGuard = 'found=$(timeout ' + SECRET_TOOL_TIMEOUT_SECONDS + ' ' + buildSearchPart(spec.providerId, spec.account) + ' 2>/dev/null); '
-    + 'case "$found" in "(@ao [], [objectpath "*) ' + marker(spec.boundary, 'lookup', quote('locked')) + '; exit 0;; esac';
+    + 'case "$found" in "(@ao [], [objectpath "*) ' + marker('lookup', quote('locked')) + '; exit 0;; esac';
   const lookup = 'key=$(timeout ' + SECRET_TOOL_TIMEOUT_SECONDS + ' ' + buildLookupPart(spec.providerId, spec.account) + '); rc=$?';
-  const lookupGuard = 'if [ "$rc" -ne 0 ]; then ' + marker(spec.boundary, 'lookup', '"$rc"') + '; exit 0; fi';
+  const lookupGuard = 'if [ "$rc" -ne 0 ]; then ' + marker('lookup', '"$rc"') + '; exit 0; fi';
   const keyGuard = 'case "$key" in '
-    + "'') " + marker(spec.boundary, 'lookup', quote('empty')) + '; exit 0;; '
-    + '*[!!-~]*) ' + marker(spec.boundary, 'lookup', quote('invalid')) + '; exit 0;; esac';
-  return [SAFE_START, lockedGuard, lookup, lookupGuard, keyGuard].concat(spec.requests.map((request) => curlPart(spec, request))).join('; ');
+    + "'') " + marker('lookup', quote('empty')) + '; exit 0;; '
+    + '*[!!-~]*) ' + marker('lookup', quote('invalid')) + '; exit 0;; esac';
+  return [SAFE_START, MAKE_BOUNDARY, BOUNDARY_GUARD, PRINT_BOUNDARY, lockedGuard, lookup, lookupGuard, keyGuard].concat(spec.requests.map((request) => curlPart(spec, request))).join('; ');
 }
 
 function lookupFailure(value, stderr) {
@@ -143,13 +144,19 @@ function readBlock(stdout, boundary, id) {
   return replyFromCurl(curlCode, status, stdout.slice(bodyStart, endMarker), retryAfter);
 }
 
-export function parseCheckOutput(result, requests, boundary) {
+export function parseCheckOutput(result, requests) {
   if (!result || result.timedOut || typeof result.stdout !== 'string') {
     return { ok: false, error: failure(ERROR_KIND.CANNOT_CONNECT, REASON.REQUEST_TIMEOUT) };
   }
-  const lookup = findLine(result.stdout, boundary + ' lookup ', 0);
+  const lineEnd = result.stdout.indexOf('\n');
+  const boundary = lineEnd === -1 ? '' : result.stdout.slice(0, lineEnd);
+  if (!BOUNDARY_PATTERN.test(boundary)) {
+    return { ok: false, error: failure(ERROR_KIND.CANNOT_CONNECT, REASON.COMMAND_FAILED) };
+  }
+  const stdout = result.stdout.slice(lineEnd + 1);
+  const lookup = findLine(stdout, boundary + ' lookup ', 0);
   if (lookup !== null) {
     return { ok: false, error: lookupFailure(lookup.value, result.stderr) };
   }
-  return { ok: true, replies: requests.map((request) => readBlock(result.stdout, boundary, request.id)) };
+  return { ok: true, replies: requests.map((request) => readBlock(stdout, boundary, request.id)) };
 }

@@ -15,7 +15,7 @@ const ACCOUNT = Object.freeze({ id: 'achat', service: 'chatgpt', name: 'me@examp
 const FIXTURE = 'codex/rollout-2026-10-18T12-00-00-placeholder.jsonl';
 
 function check(home, env) {
-  return checkAccount(chatgpt, ACCOUNT, { runCommand: shellRunner(home, env).runCommand, clock: () => NOW, newBoundary: () => '' });
+  return checkAccount(chatgpt, ACCOUNT, { runCommand: shellRunner(home, env).runCommand, clock: () => NOW });
 }
 
 function line(rateLimits) {

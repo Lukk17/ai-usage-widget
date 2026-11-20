@@ -8,18 +8,18 @@ import { ERROR_KIND, REASON, failure } from '../../../package/contents/code/core
 import { buildViewModel } from '../../../package/contents/code/core/formatter.mjs';
 import { createEntry, applySuccess } from '../../../package/contents/code/core/state.mjs';
 import { PERIOD, MAX_NAME_LENGTH } from '../../../package/contents/code/core/usage.mjs';
-import { fixtureRunner, curlBlock, TEST_BOUNDARY, testAccount } from '../support/replies.mjs';
+import { fixtureRunner, curlBlock, checkOutput, testAccount } from '../support/replies.mjs';
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 
 function run(name) {
   const runner = fixtureRunner('minimax', { remains: name }, minimax.buildRequests(NOW));
-  return fetchUsage(minimax, testAccount(minimax, 'default'), runner.runCommand, () => NOW, TEST_BOUNDARY);
+  return fetchUsage(minimax, testAccount(minimax, 'default'), runner.runCommand, () => NOW);
 }
 
 function runBody(body) {
-  const runCommand = () => Promise.resolve({ exitCode: 0, stdout: curlBlock('remains', { status: 200, headers: {}, body: body }), stderr: '' });
-  return fetchUsage(minimax, testAccount(minimax, 'default'), runCommand, () => NOW, TEST_BOUNDARY);
+  const runCommand = () => Promise.resolve({ exitCode: 0, stdout: checkOutput([curlBlock('remains', { status: 200, headers: {}, body: body })]), stderr: '' });
+  return fetchUsage(minimax, testAccount(minimax, 'default'), runCommand, () => NOW);
 }
 
 function model(name, reported) {
@@ -54,7 +54,7 @@ test('with the public CLI fixture the main bars come from the models with plan d
 test('reset times count from the time the answer came back', async () => {
   const runner = fixtureRunner('minimax', { remains: '200' }, minimax.buildRequests(NOW));
   const times = [NOW, NOW + 5000];
-  const outcome = await fetchUsage(minimax, testAccount(minimax, 'default'), runner.runCommand, () => (times.length > 1 ? times.shift() : times[0]), TEST_BOUNDARY);
+  const outcome = await fetchUsage(minimax, testAccount(minimax, 'default'), runner.runCommand, () => (times.length > 1 ? times.shift() : times[0]));
   assert.equal(outcome.usage.windows[0].resetsAt, NOW + 5000 + 7151954);
 });
 

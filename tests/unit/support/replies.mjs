@@ -42,15 +42,19 @@ export function curlBlock(id, recorded) {
   return `${TEST_BOUNDARY} begin ${id}\n${body}\n${TEST_BOUNDARY} end ${recorded.status} ${retryAfter}\n${TEST_BOUNDARY} curl 0\n`;
 }
 
+export function checkOutput(blocks) {
+  return `${TEST_BOUNDARY}\n${blocks.join('')}`;
+}
+
 export function fixtureRunner(provider, namesByRequestId, requests) {
   const calls = [];
   const runCommand = (command, timeoutMs) => {
     calls.push({ command, timeoutMs });
-    const stdout = requests.map((request) => {
+    const stdout = checkOutput(requests.map((request) => {
       const name = namesByRequestId[request.id];
       const [dir, file] = name.indexOf('/') === -1 ? [provider, name] : name.split('/');
       return curlBlock(request.id, readRecorded(dir, file));
-    }).join('');
+    }));
     return Promise.resolve({ exitCode: 0, stdout, stderr: '' });
   };
   return { runCommand, calls };

@@ -1,7 +1,7 @@
 # ADR-0002: Service requests run through curl in the executable engine
 
 Date: 2026-10-19
-Status: accepted, with one exception for saving keys in ADR-0005
+Status: accepted, with one exception for saving keys in ADR-0005, boundary part amended by ADR-0008
 Deciders: Łukasz Sarna (owner)
 
 ### Context

@@ -311,11 +311,14 @@ TestCase {
 
     function test_aCheckNeverBringsTheKeyIntoPlasmashell() {
         const provider = Registry.findProvider("minimax")
-        const boundary = CurlCommand.newBoundary()
-        const command = CurlCommand.buildCheckCommand({ providerId: "minimax", account: "aminimax", auth: provider.auth, requests: provider.buildRequests(Date.now()), boundary: boundary })
+        const requests = provider.buildRequests(Date.now())
+        const command = CurlCommand.buildCheckCommand({ providerId: "minimax", account: "aminimax", auth: provider.auth, requests: requests })
         verify(command.indexOf("scenario-") === -1, "the key is not part of the command")
         const result = runCommand(command, CurlCommand.commandTimeoutMs(1))
+        const boundary = result.stdout.split("\n")[0]
+        verify(CurlCommand.BOUNDARY_PATTERN.test(boundary), result.stdout.slice(0, 300))
         verify(result.stdout.indexOf(boundary + " end 200") !== -1, result.stdout.slice(0, 300))
+        compare(CurlCommand.parseCheckOutput(result, requests).replies[0].status, 200)
         verify(result.stdout.indexOf("scenario-minimax-percent") === -1, "the key is not in stdout")
         verify(result.stderr.indexOf("scenario-minimax-percent") === -1, "the key is not in stderr")
     }

@@ -6,14 +6,14 @@ import { BEARER_AUTH, ACCEPT_JSON } from '../../../package/contents/code/provide
 import { fetchUsage } from '../../../package/contents/code/core/fetchUsage.mjs';
 import { ERROR_KIND, REASON, failure } from '../../../package/contents/code/core/http.mjs';
 import { LABEL, makeUsage, usageAmount, usageCount, succeeded } from '../../../package/contents/code/core/usage.mjs';
-import { fixtureRunner, TEST_BOUNDARY, testAccount } from '../support/replies.mjs';
+import { fixtureRunner, testAccount } from '../support/replies.mjs';
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 const MONTH_START = Date.UTC(2026, 9, 1) / 1000;
 
 function run(names) {
   const runner = fixtureRunner('openai', names, openai.buildRequests(NOW));
-  return fetchUsage(openai, testAccount(openai, 'org'), runner.runCommand, () => NOW, TEST_BOUNDARY);
+  return fetchUsage(openai, testAccount(openai, 'org'), runner.runCommand, () => NOW);
 }
 
 test('asks the costs and completions usage of this UTC month with the admin key as a bearer token', () => {

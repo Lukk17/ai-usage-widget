@@ -6,13 +6,13 @@ import { BEARER_AUTH, ACCEPT_JSON } from '../../../package/contents/code/provide
 import { fetchUsage } from '../../../package/contents/code/core/fetchUsage.mjs';
 import { ERROR_KIND, REASON, failure } from '../../../package/contents/code/core/http.mjs';
 import { LABEL, PERIOD, usageWindow, usageAmount } from '../../../package/contents/code/core/usage.mjs';
-import { fixtureRunner, curlBlock, TEST_BOUNDARY, testAccount } from '../support/replies.mjs';
+import { fixtureRunner, curlBlock, checkOutput, testAccount } from '../support/replies.mjs';
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 
 function run(name) {
   const runner = fixtureRunner('opencode-zen', { members: name }, opencodeZen.buildRequests(NOW));
-  return fetchUsage(opencodeZen, testAccount(opencodeZen, 'team'), runner.runCommand, () => NOW, TEST_BOUNDARY);
+  return fetchUsage(opencodeZen, testAccount(opencodeZen, 'team'), runner.runCommand, () => NOW);
 }
 
 test('asks the budgets endpoint with the service account key as a bearer token', () => {
@@ -41,8 +41,8 @@ test('more than MAX_MEMBERS members are capped', async () => {
   for (let index = 0; index < MAX_MEMBERS + 7; index += 1) {
     members.push({ user_id: 'u' + index, email: 'member' + index + '@example.com', limit_micro_cents: null, spent_micro_cents: '100000000', exceeded: false, resets_at: '2026-11-01T00:00:00.000Z', source: null, updated_at: null });
   }
-  const runCommand = () => Promise.resolve({ exitCode: 0, stdout: curlBlock('members', { status: 200, headers: {}, body: members }), stderr: '' });
-  const outcome = await fetchUsage(opencodeZen, testAccount(opencodeZen, 'team'), runCommand, () => NOW, TEST_BOUNDARY);
+  const runCommand = () => Promise.resolve({ exitCode: 0, stdout: checkOutput([curlBlock('members', { status: 200, headers: {}, body: members })]), stderr: '' });
+  const outcome = await fetchUsage(opencodeZen, testAccount(opencodeZen, 'team'), runCommand, () => NOW);
   assert.equal(outcome.usage.amounts.length, MAX_MEMBERS);
 });
 
@@ -76,8 +76,8 @@ test('502 means the service could not answer and a timeout means cannot connect'
 });
 
 function runMembers(members) {
-  const runCommand = () => Promise.resolve({ exitCode: 0, stdout: curlBlock('members', { status: 200, headers: {}, body: members }), stderr: '' });
-  return fetchUsage(opencodeZen, testAccount(opencodeZen, 'team'), runCommand, () => NOW, TEST_BOUNDARY);
+  const runCommand = () => Promise.resolve({ exitCode: 0, stdout: checkOutput([curlBlock('members', { status: 200, headers: {}, body: members })]), stderr: '' });
+  return fetchUsage(opencodeZen, testAccount(opencodeZen, 'team'), runCommand, () => NOW);
 }
 
 function member(name, limit, spent) {

@@ -6,13 +6,13 @@ import { ACCEPT_JSON } from '../../../package/contents/code/providers/common.mjs
 import { fetchUsage } from '../../../package/contents/code/core/fetchUsage.mjs';
 import { ERROR_KIND, REASON, failure } from '../../../package/contents/code/core/http.mjs';
 import { LABEL, usageAmount, usageCount } from '../../../package/contents/code/core/usage.mjs';
-import { fixtureRunner, TEST_BOUNDARY, testAccount } from '../support/replies.mjs';
+import { fixtureRunner, testAccount } from '../support/replies.mjs';
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 
 function run(names) {
   const runner = fixtureRunner('anthropic', names, anthropic.buildRequests(NOW));
-  return fetchUsage(anthropic, testAccount(anthropic, 'default'), runner.runCommand, () => NOW, TEST_BOUNDARY);
+  return fetchUsage(anthropic, testAccount(anthropic, 'default'), runner.runCommand, () => NOW);
 }
 
 test('asks for daily cost and usage buckets since the start of the month in UTC, with the key in x-api-key', () => {

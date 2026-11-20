@@ -2,7 +2,7 @@
 
 A KDE Plasma panel and desktop widget that shows AI limits, spend and balance for several services and accounts in one place.
 
-[![license](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE) [![plasma](https://img.shields.io/badge/KDE%20Plasma-6.4%2B-1d99f3)](https://kde.org/plasma-desktop/) [![curl](https://img.shields.io/badge/curl-8.4%2B-073551)](https://curl.se/) [![qt](https://img.shields.io/badge/Qt-6-41cd52)](https://www.qt.io/) [![services](https://img.shields.io/badge/services-11-orange)](#services-and-endpoints) [![unit tests](https://img.shields.io/badge/unit%20tests-436-brightgreen)](tests/unit) [![qml tests](https://img.shields.io/badge/QML%20tests-53-brightgreen)](tests/qml)
+[![license](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE) [![plasma](https://img.shields.io/badge/KDE%20Plasma-6.4%2B-1d99f3)](https://kde.org/plasma-desktop/) [![curl](https://img.shields.io/badge/curl-8.4%2B-073551)](https://curl.se/) [![qt](https://img.shields.io/badge/Qt-6-41cd52)](https://www.qt.io/) [![services](https://img.shields.io/badge/services-11-orange)](#services-and-endpoints) [![unit tests](https://img.shields.io/badge/unit%20tests-446-brightgreen)](tests/unit) [![qml tests](https://img.shields.io/badge/QML%20tests-53-brightgreen)](tests/qml)
 
 ---
 
@@ -16,7 +16,7 @@ It exists because each AI service shows its usage on a different web page, and s
 
 ### Quick start
 
-The widget needs KDE Plasma and `curl` at least at the versions in the badges above, KWallet (the `kwallet` package, with `kwalletd6` running), `secret-tool` (the `libsecret` package), `gdbus` (the `glib2` package), `kreadconfig6` and `kwriteconfig6` (the `kconfig` package, part of every Plasma install), `base64`, `timeout` and GNU `find`. These exist only on Linux, so these steps have only a Unix-shell version.
+The widget needs KDE Plasma and `curl` at least at the versions in the badges above, KWallet (the `kwallet` package, with `kwalletd6` running), `secret-tool` (the `libsecret` package), `gdbus` (the `glib2` package), `kreadconfig6` and `kwriteconfig6` (the `kconfig` package, part of every Plasma install), `base64`, `od`, `tr`, `timeout` and GNU `find`. These exist only on Linux, so these steps have only a Unix-shell version.
 
 1. Install the widget for your user:
 
@@ -139,7 +139,7 @@ The path of one check for one account:
 ```mermaid
 sequenceDiagram
   accTitle: One check of one account
-  accDescr: The timer ticks, the monitor finds the account due, the check builds one shell command, the executable engine runs it, secret-tool hands the key to curl on stdin, curl calls the service over HTTPS, the provider module reads the answer, and the cards are rebuilt.
+  accDescr: The timer ticks, the monitor finds the account due, the check builds one shell command that is the same on every check of that account, the executable engine runs it, the shell makes a random boundary, secret-tool hands the key to curl on stdin, curl calls the service over HTTPS, the provider module reads the answer, and the cards are rebuilt.
   participant T as Timer (5 s)
   participant M as monitor.mjs
   participant C as check.mjs and curlCommand.mjs
@@ -153,10 +153,11 @@ sequenceDiagram
   M->>C: check MiniMax account a3f09c1d2b4e7
   C->>R: run(command, timeout)
   R->>S: sh -c command
+  S->>S: od makes a random boundary and prints it as the first line
   S->>S: secret-tool lookup, key stays in the shell
   S->>A: curl, key header read from stdin
   A-->>S: status, headers, body (at most 1 MiB)
-  S-->>R: body, status and Retry-After after a random boundary
+  S-->>R: boundary line, then body, status and Retry-After after that boundary
   R-->>C: stdout, stderr or timed out
   C->>P: interpret(reply)
   P-->>M: bars, money, rows or an error
@@ -284,6 +285,7 @@ The host names and addresses come from [tests/fixtures/scenarios.json](tests/fix
 | [docs/adr/0005-keys-saved-through-the-kwallet-dbus-api.md](docs/adr/0005-keys-saved-through-the-kwallet-dbus-api.md) | Why keys are saved through the KWallet D-Bus API |
 | [docs/adr/0006-settings-inside-the-widget-and-accounts-by-id.md](docs/adr/0006-settings-inside-the-widget-and-accounts-by-id.md) | Why settings live in the popup, accounts have generated ids and nothing is on by default |
 | [docs/adr/0007-accounts-in-the-own-settings-file.md](docs/adr/0007-accounts-in-the-own-settings-file.md) | Why the accounts live in the widget's own settings file, shared by every copy, and how the old settings are copied |
+| [docs/adr/0008-fixed-check-command-text.md](docs/adr/0008-fixed-check-command-text.md) | Why the shell makes the boundary, so the check command text stays the same and plasmashell memory stops growing |
 | [LICENSE](LICENSE) | GNU General Public License version 3 |
 | [package/contents/config/main.xml](package/contents/config/main.xml) | The old panel settings, read only to copy them into the settings file once |
 | [tests/run-in-containers.sh](tests/run-in-containers.sh) | The one command that runs every test in isolated containers |

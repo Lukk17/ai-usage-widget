@@ -24,7 +24,7 @@ export function checkAccount(provider, account, tools) {
   if (provider.kind === KIND.LOCAL) {
     return readLocalUsage(provider, account, tools);
   }
-  return fetchUsage(provider, account, tools.runCommand, tools.clock, tools.newBoundary());
+  return fetchUsage(provider, account, tools.runCommand, tools.clock);
 }
 
 export function discoverAccounts(provider, tools) {

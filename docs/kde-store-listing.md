@@ -48,7 +48,7 @@ Requirements
 
 1. KDE Plasma 6.4 or newer.
 2. curl 8.4 or newer.
-3. KWallet, secret-tool (libsecret), gdbus (glib2), timeout and GNU find.
+3. KWallet, secret-tool (libsecret), gdbus (glib2), timeout, od, tr and GNU find.
 
 The MiniMax and OpenCode Go addresses and the Claude, Codex and JetBrains file formats are not public. When they change, only that account shows an error.
 

@@ -34,19 +34,19 @@ function evaluate(provider, requests, replies, now) {
   return provider.interpret(results, now);
 }
 
-export function fetchUsage(provider, account, runCommand, clock, boundary) {
+export function fetchUsage(provider, account, runCommand, clock) {
   let requests;
   let command;
   try {
     requests = provider.buildRequests(clock(), account);
-    command = buildCheckCommand({ providerId: provider.id, account: account.id, auth: provider.auth, requests: requests, boundary: boundary });
+    command = buildCheckCommand({ providerId: provider.id, account: account.id, auth: provider.auth, requests: requests });
   } catch (error) {
     return Promise.resolve(unexpected(REASON.INTERNAL));
   }
   return Promise.resolve()
     .then(() => runCommand(command, commandTimeoutMs(requests.length)))
     .then((result) => {
-      const parsed = parseCheckOutput(result, requests, boundary);
+      const parsed = parseCheckOutput(result, requests);
       if (!parsed.ok) {
         return { ok: false, error: parsed.error };
       }

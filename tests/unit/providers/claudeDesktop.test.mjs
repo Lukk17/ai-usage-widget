@@ -24,7 +24,7 @@ function account(org) {
 }
 
 function toolsFor(home) {
-  return { runCommand: shellRunner(home).runCommand, clock: () => NOW, newBoundary: () => '' };
+  return { runCommand: shellRunner(home).runCommand, clock: () => NOW };
 }
 
 function homeWithFixture() {
@@ -52,7 +52,7 @@ test('the newest sample of the organization gives the 5hr and weekly bars, valid
 test('the file is read from XDG_CONFIG_HOME when it is set', async () => {
   const home = fakeHome();
   placeFixture(home, 'xdg/Claude/plan-usage-history.json', 'claude-desktop/plan-usage-history.json');
-  const tools = { runCommand: shellRunner(home, { XDG_CONFIG_HOME: home + '/xdg' }).runCommand, clock: () => NOW, newBoundary: () => '' };
+  const tools = { runCommand: shellRunner(home, { XDG_CONFIG_HOME: home + '/xdg' }).runCommand, clock: () => NOW };
   assert.equal((await checkAccount(claudeDesktop, account(ORG_A), tools)).usage.windows.length, 2);
 });
 
@@ -164,7 +164,7 @@ test('the card gets the estimates marked as estimates', async () => {
   const home = fakeHome();
   placeFixture(home, FILE, 'claude-desktop/history-two-orgs.json');
   const now = BASE + 90 * MINUTE;
-  const outcome = await checkAccount(claudeDesktop, account(ORG_A), { runCommand: shellRunner(home).runCommand, clock: () => now, newBoundary: () => '' });
+  const outcome = await checkAccount(claudeDesktop, account(ORG_A), { runCommand: shellRunner(home).runCommand, clock: () => now });
   assert.deepEqual(outcome.usage.windows.map((item) => [item.period, item.resetsAt, item.estimated]), [
     [PERIOD.FIVE_HOUR, BASE + 7.5 * MINUTE + 5 * HOUR_MS, true],
     [PERIOD.WEEKLY, BASE + 7.5 * MINUTE + WEEK_MS, true],

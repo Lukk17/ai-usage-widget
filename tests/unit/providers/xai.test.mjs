@@ -6,7 +6,7 @@ import { BEARER_AUTH, ACCEPT_JSON } from '../../../package/contents/code/provide
 import { fetchUsage } from '../../../package/contents/code/core/fetchUsage.mjs';
 import { ERROR_KIND, REASON, failure } from '../../../package/contents/code/core/http.mjs';
 import { LABEL, makeUsage, usageAmount, succeeded } from '../../../package/contents/code/core/usage.mjs';
-import { fixtureRunner, TEST_BOUNDARY, testAccount } from '../support/replies.mjs';
+import { fixtureRunner, testAccount } from '../support/replies.mjs';
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 const TEAM = '00000000-0000-4000-8000-000000000001';
@@ -14,7 +14,7 @@ const ACCOUNT = testAccount(xai, 'team', { teamId: TEAM });
 
 function run(names) {
   const runner = fixtureRunner('xai', names, xai.buildRequests(NOW, ACCOUNT));
-  return fetchUsage(xai, ACCOUNT, runner.runCommand, () => NOW, TEST_BOUNDARY);
+  return fetchUsage(xai, ACCOUNT, runner.runCommand, () => NOW);
 }
 
 test('asks the prepaid balance and the invoice preview of the team with the management key', () => {

@@ -6,13 +6,13 @@ import { BEARER_AUTH, ACCEPT_JSON } from '../../../package/contents/code/provide
 import { fetchUsage } from '../../../package/contents/code/core/fetchUsage.mjs';
 import { ERROR_KIND, REASON, failure } from '../../../package/contents/code/core/http.mjs';
 import { LABEL, makeUsage, usageAmount, usageText, succeeded } from '../../../package/contents/code/core/usage.mjs';
-import { fixtureRunner, curlBlock, readRecorded, TEST_BOUNDARY, testAccount } from '../support/replies.mjs';
+import { fixtureRunner, curlBlock, checkOutput, readRecorded, testAccount } from '../support/replies.mjs';
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 
 function run(names) {
   const runner = fixtureRunner('huggingface', names, huggingFace.buildRequests(NOW));
-  return fetchUsage(huggingFace, testAccount(huggingFace, 'me'), runner.runCommand, () => NOW, TEST_BOUNDARY);
+  return fetchUsage(huggingFace, testAccount(huggingFace, 'me'), runner.runCommand, () => NOW);
 }
 
 function missing(field) {
@@ -37,8 +37,8 @@ test('200 for a PRO account shows the included credits left next to the spend of
 });
 
 test('included credits left never go below zero', async () => {
-  const runCommand = () => Promise.resolve({ exitCode: 0, stdout: curlBlock('whoami', readRecorded('huggingface', 'whoami-200')) + curlBlock('usage', { status: 200, headers: {}, body: { currency: 'usd', periods: [{ period: '2026-10-01T00:00:00.000Z', sessions: [{ id: 's', requestCount: 1, costCents: 500 }] }] } }), stderr: '' });
-  const outcome = await fetchUsage(huggingFace, testAccount(huggingFace, 'me'), runCommand, () => NOW, TEST_BOUNDARY);
+  const runCommand = () => Promise.resolve({ exitCode: 0, stdout: checkOutput([curlBlock('whoami', readRecorded('huggingface', 'whoami-200')), curlBlock('usage', { status: 200, headers: {}, body: { currency: 'usd', periods: [{ period: '2026-10-01T00:00:00.000Z', sessions: [{ id: 's', requestCount: 1, costCents: 500 }] }] } })]), stderr: '' });
+  const outcome = await fetchUsage(huggingFace, testAccount(huggingFace, 'me'), runCommand, () => NOW);
   assert.equal(outcome.usage.amounts[0].label, LABEL.INCLUDED_CREDITS_LEFT);
   assert.equal(outcome.usage.amounts[0].value, 0);
 });

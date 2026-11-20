@@ -9,7 +9,7 @@ import { KIND } from '../../package/contents/code/core/providerKind.mjs';
 import { isValidLabel } from '../../package/contents/code/core/validation.mjs';
 import { buildCheckCommand } from '../../package/contents/code/core/curlCommand.mjs';
 import { DEFAULT_REFRESH_SECONDS, REFRESH_CHOICES_SECONDS } from '../../package/contents/code/core/accounts.mjs';
-import { TEST_BOUNDARY, testAccount } from './support/replies.mjs';
+import { testAccount } from './support/replies.mjs';
 
 const PACKAGE = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'package');
 const NOW = Date.UTC(2026, 9, 18);
@@ -54,7 +54,7 @@ test('a local provider needs no key, reads with a fixed command and caps what it
 test('every remote request builds into a safe curl command', () => {
   ALL_PROVIDERS.filter((provider) => provider.kind === KIND.REMOTE).forEach((provider) => {
     const account = testAccount(provider, 'default', { teamId: '65c1e471-205f-4566-9c5a-07198bcdf4ce' });
-    const command = buildCheckCommand({ providerId: provider.id, account: account.id, auth: provider.auth, requests: provider.buildRequests(NOW, account), boundary: TEST_BOUNDARY });
+    const command = buildCheckCommand({ providerId: provider.id, account: account.id, auth: provider.auth, requests: provider.buildRequests(NOW, account) });
     assert.match(command, /--proto '=https' --max-redirs 0/, provider.id);
   });
 });

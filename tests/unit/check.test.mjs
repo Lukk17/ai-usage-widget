@@ -5,7 +5,7 @@ import { checkAccount, discoverAccounts } from '../../package/contents/code/core
 import { KIND } from '../../package/contents/code/core/providerKind.mjs';
 import { ERROR_KIND, REASON, failure } from '../../package/contents/code/core/http.mjs';
 import { LABEL, makeUsage, usageText, succeeded } from '../../package/contents/code/core/usage.mjs';
-import { TEST_BOUNDARY } from './support/replies.mjs';
+import { TEST_BOUNDARY, checkOutput } from './support/replies.mjs';
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 const ACCOUNT = Object.freeze({ id: 'alocal', service: 'local', name: 'me' });
@@ -29,7 +29,6 @@ function tools(stdout) {
       return Promise.resolve({ exitCode: 0, stdout: stdout, stderr: '' });
     },
     clock: () => NOW,
-    newBoundary: () => TEST_BOUNDARY,
   };
 }
 
@@ -46,7 +45,7 @@ test('a failed local read is passed on, and an interpreter that throws is an int
   assert.deepEqual(await checkAccount(throwing, ACCOUNT, tools('found 1\nx')), { ok: false, error: failure(ERROR_KIND.UNEXPECTED_ANSWER, REASON.INTERNAL) });
 });
 
-test('a remote account goes through secret-tool and curl with a new boundary', async () => {
+test('a remote account goes through secret-tool and curl', async () => {
   const remote = {
     id: 'requesty',
     kind: KIND.REMOTE,
@@ -54,7 +53,7 @@ test('a remote account goes through secret-tool and curl with a new boundary', a
     buildRequests: () => [{ id: 'main', url: 'https://example.invalid/main', headers: [] }],
     interpret: () => succeeded(makeUsage({})),
   };
-  const fake = tools(`${TEST_BOUNDARY} begin main\n{}\n${TEST_BOUNDARY} end 200 \n${TEST_BOUNDARY} curl 0\n`);
+  const fake = tools(checkOutput([`${TEST_BOUNDARY} begin main\n{}\n${TEST_BOUNDARY} end 200 \n${TEST_BOUNDARY} curl 0\n`]));
   const outcome = await checkAccount(remote, { id: 'awork', service: 'requesty', name: 'work' }, fake);
   assert.equal(outcome.ok, true);
   assert.match(fake.calls[0].command, /secret-tool lookup server 'ai-usage' user 'requesty\.awork'/);

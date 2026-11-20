@@ -16,7 +16,7 @@ const IDEA = '.cache/JetBrains/IntelliJIdea2026.2/log/idea.log';
 const PYCHARM = '.cache/JetBrains/PyCharm2026.2/log/idea.log';
 
 function check(home) {
-  return checkAccount(jetbrains, ACCOUNT, { runCommand: shellRunner(home).runCommand, clock: () => NOW, newBoundary: () => '' });
+  return checkAccount(jetbrains, ACCOUNT, { runCommand: shellRunner(home).runCommand, clock: () => NOW });
 }
 
 test('JetBrains AI needs no key and explains that in its help text', () => {

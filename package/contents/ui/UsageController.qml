@@ -7,7 +7,6 @@ import "../code/core/formatter.mjs" as Formatter
 import "../code/core/accounts.mjs" as Accounts
 import "../code/core/accountActions.mjs" as AccountActions
 import "../code/core/check.mjs" as Check
-import "../code/core/curlCommand.mjs" as CurlCommand
 import "../code/core/listSync.mjs" as ListSync
 import "../code/core/settingsFile.mjs" as SettingsFile
 import "../code/core/units.mjs" as Units
@@ -33,8 +32,7 @@ Item {
     readonly property ListModel sectionModel: ListModel {}
     readonly property var tools: ({
         runCommand: (command, timeoutMs) => commandRunner.run(command, timeoutMs),
-        clock: () => controller.clock(),
-        newBoundary: () => CurlCommand.newBoundary()
+        clock: () => controller.clock()
     })
 
     property var monitor: null

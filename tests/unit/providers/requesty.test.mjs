@@ -6,13 +6,13 @@ import { BEARER_AUTH, ACCEPT_JSON } from '../../../package/contents/code/provide
 import { fetchUsage } from '../../../package/contents/code/core/fetchUsage.mjs';
 import { ERROR_KIND, REASON, failure } from '../../../package/contents/code/core/http.mjs';
 import { LABEL, PERIOD, usageWindow, usageAmount, usageAmountProblem } from '../../../package/contents/code/core/usage.mjs';
-import { fixtureRunner, curlBlock, readRecorded, TEST_BOUNDARY, testAccount } from '../support/replies.mjs';
+import { fixtureRunner, curlBlock, checkOutput, readRecorded, testAccount } from '../support/replies.mjs';
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 
 function run(names) {
   const runner = fixtureRunner('requesty', names, requesty.buildRequests(NOW));
-  return fetchUsage(requesty, testAccount(requesty, 'work'), runner.runCommand, () => NOW, TEST_BOUNDARY);
+  return fetchUsage(requesty, testAccount(requesty, 'work'), runner.runCommand, () => NOW);
 }
 
 test('asks for the key itself and, optionally, for the organization, with a bearer key and fixed headers', () => {
@@ -52,16 +52,16 @@ test('a 401 on the organization also says the balance needs manage permission', 
 test('the balance is read from every number form Requesty may send', async () => {
   const cases = [[87.65, 87.65], [-12.5, -12.5], ['87.65', 87.65], ['-3', -3], [1e-5, 1e-5], ['1e-5', 1e-5], ['2.5E+3', 2500], [0, 0]];
   for (const [balance, expected] of cases) {
-    const runCommand = () => Promise.resolve({ exitCode: 0, stdout: curlBlock('key', readRecorded('requesty', 'apikey-self-200')) + curlBlock('org', { status: 200, headers: {}, body: { balance: balance } }), stderr: '' });
-    const outcome = await fetchUsage(requesty, testAccount(requesty, 'work'), runCommand, () => NOW, TEST_BOUNDARY);
+    const runCommand = () => Promise.resolve({ exitCode: 0, stdout: checkOutput([curlBlock('key', readRecorded('requesty', 'apikey-self-200')), curlBlock('org', { status: 200, headers: {}, body: { balance: balance } })]), stderr: '' });
+    const outcome = await fetchUsage(requesty, testAccount(requesty, 'work'), runCommand, () => NOW);
     assert.deepEqual(outcome.usage.amounts[1], usageAmount(LABEL.BALANCE, '', expected, null, false), String(balance));
   }
 });
 
 test('a balance that is not a number keeps the row and says the format changed', async () => {
   for (const balance of ['lots', null, '1e', true, '9'.repeat(400)]) {
-    const runCommand = () => Promise.resolve({ exitCode: 0, stdout: curlBlock('key', readRecorded('requesty', 'apikey-self-200')) + curlBlock('org', { status: 200, headers: {}, body: { balance: balance } }), stderr: '' });
-    const outcome = await fetchUsage(requesty, testAccount(requesty, 'work'), runCommand, () => NOW, TEST_BOUNDARY);
+    const runCommand = () => Promise.resolve({ exitCode: 0, stdout: checkOutput([curlBlock('key', readRecorded('requesty', 'apikey-self-200')), curlBlock('org', { status: 200, headers: {}, body: { balance: balance } })]), stderr: '' });
+    const outcome = await fetchUsage(requesty, testAccount(requesty, 'work'), runCommand, () => NOW);
     assert.deepEqual(outcome.usage.amounts[1], usageAmountProblem(LABEL.BALANCE, failure(ERROR_KIND.UNEXPECTED_ANSWER, REASON.SHAPE_CHANGED)), String(balance));
   }
 });

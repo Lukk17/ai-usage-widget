@@ -6,13 +6,13 @@ import { BEARER_AUTH, ACCEPT_JSON } from '../../../package/contents/code/provide
 import { fetchUsage } from '../../../package/contents/code/core/fetchUsage.mjs';
 import { ERROR_KIND, REASON, failure } from '../../../package/contents/code/core/http.mjs';
 import { PERIOD, usageWindow } from '../../../package/contents/code/core/usage.mjs';
-import { fixtureRunner, TEST_BOUNDARY, testAccount } from '../support/replies.mjs';
+import { fixtureRunner, testAccount } from '../support/replies.mjs';
 
 const NOW = Date.UTC(2026, 9, 18, 12);
 
 function run(name) {
   const runner = fixtureRunner('opencode-go', { usage: name }, opencodeGo.buildRequests(NOW));
-  return fetchUsage(opencodeGo, testAccount(opencodeGo, 'alice'), runner.runCommand, () => NOW, TEST_BOUNDARY);
+  return fetchUsage(opencodeGo, testAccount(opencodeGo, 'alice'), runner.runCommand, () => NOW);
 }
 
 test('asks the Go usage endpoint with the account key as a bearer token', () => {
