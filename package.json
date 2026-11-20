@@ -1,6 +1,6 @@
 {
   "name": "ai-usage-widget",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "KDE Plasma 6 widget that shows AI usage for several services and accounts",

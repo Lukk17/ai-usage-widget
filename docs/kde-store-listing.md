@@ -56,16 +56,10 @@ License: GPL-3.0-or-later.
 
 ---
 
-### 3. Changelog for 1.0.0
+### 3. Changelog for 1.0.1
 
-1. First release.
-2. Usage, limits and spend for Claude, ChatGPT, OpenAI API, Anthropic API, xAI API, OpenCode Go, OpenCode Zen, MiniMax, Requesty, Hugging Face and JetBrains AI.
-3. Several accounts per service, added, edited, reordered and deleted inside the popup.
-4. Keys saved in KWallet, with an Unlock KWallet button when the wallet is locked.
-5. Accounts kept in the widget's own settings file, so a Global Theme layout or a panel reset does not remove them, and every copy of the widget shares them.
-6. Estimated reset times for Claude.
-7. One refresh setting for all accounts, 30 seconds by default, and a backoff when a service limits requests.
-8. Yellow and red values that stay readable on light and dark themes.
+1. Fixed plasmashell memory that grew with every check, about 80 MB per hour. The check command text is now the same on every check, and the shell makes the random boundary itself.
+2. The widget now also needs od and tr from coreutils.
 
 ---
 
@@ -80,7 +74,7 @@ ai, usage, quota, limits, spend, api, monitor, kwallet, claude, openai, plasma6,
 ### 5. Version
 
 ```text
-1.0.0
+1.0.1
 ```
 
 ---
@@ -93,7 +87,7 @@ ai, usage, quota, limits, spend, api, monitor, kwallet, claude, openai, plasma6,
 | 6.2 | Product name | AI Usage, see 1.1 |
 | 6.3 | Original | Yes, this is the original work of the author |
 | 6.4 | License | GPL-3.0-or-later, the same as [LICENSE](../LICENSE) |
-| 6.5 | Version | 1.0.0 |
+| 6.5 | Version | 1.0.1 |
 | 6.6 | Source link | `https://github.com/Lukk17/ai-usage-widget` |
 | 6.7 | Logo | [docs/store-assets/ai-usage-logo-512.png](store-assets/ai-usage-logo-512.png), source [docs/store-assets/ai-usage-logo.svg](store-assets/ai-usage-logo.svg) |
 | 6.8 | Tags | See 4 |
